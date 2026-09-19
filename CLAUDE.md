@@ -1,0 +1,72 @@
+# CrazyGolfGame — rules for agents working in this repo
+
+## What this is
+
+A private golf scoring app with a "Crazy Cards" side game, for JF, his family and
+close friends. 2–4 players, one group at a time. Not commercial. Must cost $0 to run.
+
+Read [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) before changing anything. It is the
+source of truth. If the code and that document disagree, the document wins — and if
+the document is actually wrong, update it in the same change.
+
+## Stack
+
+React 19 · TypeScript 6 · Vite 8 · Tailwind 4 · Firebase (Firestore + Auth, Spark plan)
+· Leaflet + Esri World Imagery · Vitest + Playwright
+
+## Hard constraints — do not violate these
+
+1. **Stay on the Firebase Spark plan.** No Cloud Storage (it requires the paid Blaze
+   plan). Profile photos are resized client-side and stored as base64 in the user
+   document. Never add a dependency that requires a credit card.
+2. **No paid APIs, ever.** Course data lives in our own Firestore. Never introduce a
+   golf-data subscription.
+3. **Cards are honour-system.** The app records what was played, by whom, against whom,
+   on which hole, and when. It **never** alters a score because of a card.
+4. **Offline must keep working.** Any write path must survive being offline and sync on
+   reconnect. Do not bypass Firestore's offline queue with raw `fetch`.
+5. **Sunlight-first UI.** Light theme, high contrast, minimum 3rem tap targets, reachable
+   one-handed. Do not add a dark theme.
+6. **No money features.** No betting, wagering, or payments. Requested explicitly.
+
+## Task workflow
+
+1. Pick a task from [docs/TASKS.md](docs/TASKS.md). Work one task per branch.
+2. Branch name: `task/T-1.3-haversine-util`.
+3. Write the test first where the task has a testable core (deal engine, distance
+   maths, score totals). These have exact right answers — prove them.
+4. `npm run verify` must pass before you are done. CI runs the same checks plus e2e.
+5. Tick the task in `docs/TASKS.md` in the same commit.
+6. If you discover a requirement that isn't captured, add it to `docs/REQUIREMENTS.md`
+   in the same commit. Undocumented decisions are how this project rots.
+
+## Conventions
+
+- `@/` maps to `src/`.
+- Feature-first layout: `src/features/<feature>/`. Shared primitives in `src/components/`,
+  pure logic in `src/lib/`.
+- Pure logic goes in `src/lib/` and is unit tested directly — do not bury maths in a
+  component where it can only be reached through a render.
+- Metres everywhere. Never yards. The scorecard is metric and the players are Australian.
+- Comments explain *why*, not *what*. Match the density of the surrounding code.
+
+## Course data
+
+`data/courses/trangie/` holds `scorecard.json` (hand-transcribed, verified) and
+`geometry.json` (OpenStreetMap, ODbL). See [docs/course-data-trangie.md](docs/course-data-trangie.md)
+for what is known and what is missing.
+
+```bash
+node scripts/validate-scorecard.js    # re-verify a transcription
+node scripts/fetch-osm-course.js      # re-pull geometry from OSM
+node scripts/generate-icons.js        # regenerate PWA icons
+```
+
+**Do not hand-edit `geometry.json`'s coordinates.** It is generated. Hole assignment is
+done through the admin course mapper so the change is auditable and verifiable against
+the scorecard distances.
+
+## Attribution required
+
+OpenStreetMap contributors (ODbL) for course geometry, and Esri for satellite imagery.
+Both must appear in the app's UI.

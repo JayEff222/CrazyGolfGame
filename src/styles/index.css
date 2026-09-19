@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/*
+ * CrazyGolfGame palette — PGA broadcast vibe, fresh green.
+ * Tuned for readability in direct sunlight: high contrast, light ground.
+ * Deliberately a light theme; dark mode reads worse on a fairway at midday.
+ */
+@theme {
+  --color-fairway-50:  #F4F7F2;
+  --color-fairway-100: #E3EFE3;
+  --color-fairway-200: #C2DFC5;
+  --color-fairway-300: #8FC79A;
+  --color-fairway-400: #5AAE6C;
+  --color-fairway-500: #3DA35D;
+  --color-fairway-600: #2A8049;
+  --color-fairway-700: #046A38;
+  --color-fairway-800: #04512C;
+  --color-fairway-900: #17211B;
+
+  --color-flag-400: #FFC23C;
+  --color-flag-500: #F2A900;
+  --color-flag-600: #C97F00;
+
+  --color-chaos-500: #E8541E;
+  --color-chaos-600: #C13F10;
+
+  --font-display: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Minimum tap target for gloved, sunlit, one-handed use. */
+@utility tap-target {
+  min-height: 3rem;
+  min-width: 3rem;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-fairway-50);
+  color: var(--color-fairway-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* Respect notches and home indicators on phones. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Stop iOS zooming the page when a number input is focused. */
+input, select, textarea {
+  font-size: 16px;
+}

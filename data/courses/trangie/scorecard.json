@@ -1,0 +1,57 @@
+{
+  "$comment": "Transcribed from a photo of the physical Trangie Golf Club Co-op Ltd scorecard on 2026-09-19. Par and stroke index independently verified against the in-app hole screenshots for holes 1, 7, 13, 14 and 18 - all five matched. Out/In/Total sums verified arithmetically.",
+  "courseId": "trangie",
+  "name": "Trangie Golf Course",
+  "club": "Trangie Golf Club Co-op Ltd",
+  "country": "AU",
+  "state": "NSW",
+  "postcode": "2823",
+  "holeCount": 18,
+  "units": "metres",
+  "ratings": {
+    "acr": 69,
+    "alcr": 71
+  },
+  "tees": [
+    {
+      "id": "mens",
+      "label": "Mens",
+      "totalMetres": 5998,
+      "outMetres": 2897,
+      "inMetres": 3101,
+      "totalPar": 71,
+      "outPar": 35,
+      "inPar": 36
+    },
+    {
+      "id": "ladies",
+      "label": "Ladies",
+      "totalMetres": 5457,
+      "outMetres": 2667,
+      "inMetres": 2790,
+      "totalPar": 72,
+      "outPar": 36,
+      "inPar": 36
+    }
+  ],
+  "holes": [
+    { "number": 1,  "mens": { "metres": 411, "par": 4, "strokeIndex": 1,  "secondIndex": 19 }, "ladies": { "metres": 407, "par": 5, "strokeIndex": 14 }, "matchIndex": 18 },
+    { "number": 2,  "mens": { "metres": 340, "par": 4, "strokeIndex": 7,  "secondIndex": 25 }, "ladies": { "metres": 320, "par": 4, "strokeIndex": 8  }, "matchIndex": 8  },
+    { "number": 3,  "mens": { "metres": 142, "par": 3, "strokeIndex": 14, "secondIndex": 32 }, "ladies": { "metres": 128, "par": 3, "strokeIndex": 15 }, "matchIndex": 12 },
+    { "number": 4,  "mens": { "metres": 400, "par": 4, "strokeIndex": 3,  "secondIndex": 21 }, "ladies": { "metres": 347, "par": 4, "strokeIndex": 2  }, "matchIndex": 3  },
+    { "number": 5,  "mens": { "metres": 300, "par": 4, "strokeIndex": 18, "secondIndex": null }, "ladies": { "metres": 277, "par": 4, "strokeIndex": 18 }, "matchIndex": 14 },
+    { "number": 6,  "mens": { "metres": 110, "par": 3, "strokeIndex": 15, "secondIndex": null }, "ladies": { "metres": 107, "par": 3, "strokeIndex": 9  }, "matchIndex": 6  },
+    { "number": 7,  "mens": { "metres": 471, "par": 5, "strokeIndex": 9,  "secondIndex": 27 }, "ladies": { "metres": 414, "par": 5, "strokeIndex": 10 }, "matchIndex": 10 },
+    { "number": 8,  "mens": { "metres": 376, "par": 4, "strokeIndex": 8,  "secondIndex": 26 }, "ladies": { "metres": 347, "par": 4, "strokeIndex": 4  }, "matchIndex": 1  },
+    { "number": 9,  "mens": { "metres": 347, "par": 4, "strokeIndex": 11, "secondIndex": 29 }, "ladies": { "metres": 320, "par": 4, "strokeIndex": 6  }, "matchIndex": 16 },
+    { "number": 10, "mens": { "metres": 360, "par": 4, "strokeIndex": 13, "secondIndex": 31 }, "ladies": { "metres": 315, "par": 4, "strokeIndex": 13 }, "matchIndex": 5  },
+    { "number": 11, "mens": { "metres": 380, "par": 4, "strokeIndex": 6,  "secondIndex": 24 }, "ladies": { "metres": 324, "par": 4, "strokeIndex": 12 }, "matchIndex": 11 },
+    { "number": 12, "mens": { "metres": 368, "par": 4, "strokeIndex": 4,  "secondIndex": 22 }, "ladies": { "metres": 359, "par": 4, "strokeIndex": 1  }, "matchIndex": 2  },
+    { "number": 13, "mens": { "metres": 447, "par": 5, "strokeIndex": 12, "secondIndex": 30 }, "ladies": { "metres": 438, "par": 5, "strokeIndex": 3  }, "matchIndex": 15 },
+    { "number": 14, "mens": { "metres": 133, "par": 3, "strokeIndex": 16, "secondIndex": null }, "ladies": { "metres": 119, "par": 3, "strokeIndex": 17 }, "matchIndex": 7  },
+    { "number": 15, "mens": { "metres": 350, "par": 4, "strokeIndex": 10, "secondIndex": 28 }, "ladies": { "metres": 323, "par": 4, "strokeIndex": 7  }, "matchIndex": 13 },
+    { "number": 16, "mens": { "metres": 331, "par": 4, "strokeIndex": 17, "secondIndex": null }, "ladies": { "metres": 302, "par": 4, "strokeIndex": 16 }, "matchIndex": 4  },
+    { "number": 17, "mens": { "metres": 220, "par": 3, "strokeIndex": 2,  "secondIndex": 20 }, "ladies": { "metres": 180, "par": 3, "strokeIndex": 11 }, "matchIndex": 17 },
+    { "number": 18, "mens": { "metres": 512, "par": 5, "strokeIndex": 5,  "secondIndex": 23 }, "ladies": { "metres": 430, "par": 5, "strokeIndex": 5  }, "matchIndex": 9  }
+  ]
+}
