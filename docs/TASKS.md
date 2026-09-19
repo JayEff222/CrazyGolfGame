@@ -112,9 +112,9 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 ## Phase 6 — Card catalogue
 
 - [x] **T-6.1** Card model + schema — title, effect, timing, targeting, active
-- [ ] **T-6.2** In-app card editor (add / edit / deactivate from a phone)
+- [x] **T-6.2** In-app card editor (add / edit / deactivate from a phone)
 - [x] **T-6.3** Card selection + deck view — the picker shows the full rule text, so it doubles as the way to read the deck
-- [~] **T-6.4** Seed the starter deck
+- [x] **T-6.4** Seed the starter deck
   - [x] 20 cards written and validated (`data/cards/starter-deck.json`)
   - [ ] Run `npm run seed:cards` — **JF**
 

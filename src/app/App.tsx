@@ -15,6 +15,10 @@ const RoundsHome = lazy(() =>
   import('../features/rounds').then((m) => ({ default: m.RoundsHome })),
 )
 
+const CardEditor = lazy(() =>
+  import('../features/cards').then((m) => ({ default: m.CardEditor })),
+)
+
 const CourseMapper = lazy(() =>
   import('../features/admin/CourseMapper').then((m) => ({ default: m.CourseMapper })),
 )
@@ -74,10 +78,12 @@ function Clubhouse({
   onOpenMapper,
   onOpenYardage,
   onOpenRounds,
+  onOpenCardEditor,
 }: {
   onOpenMapper: () => void
   onOpenYardage: () => void
   onOpenRounds: () => void
+  onOpenCardEditor: () => void
 }) {
   const { profile, isAdmin, signOut } = useAuth()
 
@@ -116,6 +122,16 @@ function Clubhouse({
         </button>
       )}
 
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={onOpenCardEditor}
+          className="tap-target rounded-xl border-2 border-fairway-600 px-6 text-base font-bold text-fairway-800"
+        >
+          Edit the cards
+        </button>
+      )}
+
       {profile !== null && <UserIdCard uid={profile.uid} />}
       <button
         type="button"
@@ -133,7 +149,7 @@ function Clubhouse({
  * A real router arrives with the round lifecycle in Phase 3, which is the point
  * where shareable URLs (a join link, a specific hole) actually start to matter.
  */
-type Screen = 'clubhouse' | 'course-mapper' | 'yardage' | 'rounds'
+type Screen = 'clubhouse' | 'course-mapper' | 'yardage' | 'rounds' | 'card-editor'
 
 function Gate() {
   const { status, isAdmin } = useAuth()
@@ -141,6 +157,23 @@ function Gate() {
 
   if (status === 'loading') return <Loading />
   if (status === 'signed-out') return <SignInScreen />
+
+  if (screen === 'card-editor' && isAdmin) {
+    return (
+      <div className="flex min-h-full flex-col">
+        <button
+          type="button"
+          onClick={() => setScreen('clubhouse')}
+          className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
+        >
+          &lsaquo; Back
+        </button>
+        <Suspense fallback={<p className="p-6 text-fairway-700">Loading…</p>}>
+          <CardEditor />
+        </Suspense>
+      </div>
+    )
+  }
 
   if (screen === 'rounds') {
     return (
@@ -198,6 +231,7 @@ function Gate() {
       onOpenMapper={() => setScreen('course-mapper')}
       onOpenYardage={() => setScreen('yardage')}
       onOpenRounds={() => setScreen('rounds')}
+      onOpenCardEditor={() => setScreen('card-editor')}
     />
   )
 }
