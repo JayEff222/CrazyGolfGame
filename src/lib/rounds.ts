@@ -182,19 +182,32 @@ export async function loadRound(roundId: string): Promise<Round | null> {
   return snapshot.exists() ? readRound(snapshot.id, snapshot.data()) : null
 }
 
-/** Adds the signed-in player to a round. A player only ever adds themselves. */
+/**
+ * Adds the signed-in player to a round. A player only ever adds themselves.
+ *
+ * Clearing `left` is load-bearing: leaveRound sets it and subscribePlayers filters
+ * on it, so without this a player who left could write their document, see a
+ * success, and still be invisible and uncounted for the rest of the round.
+ *
+ * An existing player keeps the order they already had, so rejoining does not
+ * shuffle the playing order for everyone else.
+ */
 export async function joinRound(
   roundId: string,
   player: Omit<RoundPlayer, 'order'> & { order?: number },
 ): Promise<void> {
   const existing = await getDocs(playersRef(roundId))
+  const previous = existing.docs.find((d) => d.id === player.uid)
+  const previousOrder = previous ? Number(previous.data().order) : undefined
+
   await setDoc(
     playerRef(roundId, player.uid),
     {
       uid: player.uid,
       displayName: player.displayName,
       avatar: player.avatar ?? null,
-      order: player.order ?? existing.size,
+      order: player.order ?? previousOrder ?? existing.size,
+      left: false,
       joinedAt: serverTimestamp(),
     },
     { merge: true },
