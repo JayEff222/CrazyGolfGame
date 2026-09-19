@@ -13,10 +13,13 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "verify": "npm run typecheck && npm run lint && npm run test",
-    "test:rules": "firebase emulators:exec --only firestore --project crazygolfgame-rules-test \"vitest run --config vitest.rules.config.ts\"",
-    "emulators": "firebase emulators:start --only firestore,auth --project crazygolfgame",
-    "deploy:rules": "firebase deploy --only firestore:rules",
-    "deploy": "npm run build && firebase deploy"
+    "test:rules": "node node_modules/firebase-tools/lib/bin/firebase.js emulators:exec --only firestore --project crazygolfgame-rules-test \"vitest run --config vitest.rules.config.ts\"",
+    "emulators": "node node_modules/firebase-tools/lib/bin/firebase.js emulators:start --only firestore,auth --project crazygolfgame",
+    "deploy:rules": "node node_modules/firebase-tools/lib/bin/firebase.js deploy --only firestore:rules",
+    "deploy": "npm run build && node node_modules/firebase-tools/lib/bin/firebase.js deploy",
+    "fb": "node node_modules/firebase-tools/lib/bin/firebase.js",
+    "fb:login": "node node_modules/firebase-tools/lib/bin/firebase.js login --no-localhost",
+    "fb:logout": "node node_modules/firebase-tools/lib/bin/firebase.js logout"
   },
   "dependencies": {
     "firebase": "^12.19.0",

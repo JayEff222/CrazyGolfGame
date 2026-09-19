@@ -66,6 +66,26 @@ node scripts/generate-icons.js        # regenerate PWA icons
 done through the admin course mapper so the change is auditable and verifiable against
 the scorecard distances.
 
+
+## Running the Firebase CLI on a locked-down machine
+
+JF's work laptop runs ThreatLocker, which blocks the `.cmd` shim that `npx firebase`
+and `npm` generate. `node` itself is approved, so every Firebase script in
+`package.json` invokes the CLI through its JS entry point directly:
+
+```
+node node_modules/firebase-tools/lib/bin/firebase.js <command>
+```
+
+Use `npm run fb -- <command>` for anything ad hoc. Do not "simplify" these scripts
+back to `firebase <command>` or `npx firebase` - it will be blocked on his machine.
+
+Login uses `--no-localhost` (a paste-the-code flow) rather than a localhost callback
+server, which is also less likely to trip endpoint restrictions.
+
+If the CLI is unavailable entirely, rules can be published by pasting
+`firestore.rules` into the Firebase console under Firestore Database > Rules.
+
 ## Attribution required
 
 OpenStreetMap contributors (ODbL) for course geometry, and Esri for satellite imagery.
