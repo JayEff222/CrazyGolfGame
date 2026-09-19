@@ -24,6 +24,23 @@ jobs:
       - name: Validate course data
         run: node scripts/validate-scorecard.js
 
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      # The Firestore emulator is a JVM process, so the runner needs a JDK.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - name: Firestore security rules tests
+        run: npm run test:rules
+
   e2e:
     runs-on: ubuntu-latest
     steps:

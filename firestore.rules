@@ -1,0 +1,118 @@
+rules_version = '2';
+
+// CrazyGolfGame security rules.
+//
+// These rules are the actual lock on the data - the API key in the client bundle
+// is public by design and protects nothing. Everything below assumes a small,
+// known group of friends, so the model is "signed-in users can see the round,
+// but can only write their own stuff".
+//
+// Tested in tests/unit/firestore-rules.test.ts against the emulator. If you change
+// a rule, change a test.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Admins are listed by hand in the Firebase console. There is deliberately no
+    // self-service path to becoming one - a document nobody can write from the app
+    // sidesteps the bootstrap problem without needing a server or custom claims.
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /admins/{uid} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Player profiles. Readable by any signed-in user because you need your playing
+    // partners' names and avatars on the leaderboard. Writable only by the owner,
+    // or by an admin performing the password reset described in REQUIREMENTS.md §3.
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create, update: if isSelf(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Course data is reference data: everyone reads it, only an admin edits it.
+    // This is what stops a player quietly moving a green closer to their ball.
+    match /courses/{courseId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+
+      match /holes/{holeId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    // The card catalogue, edited in-app by an admin between play tests.
+    match /cards/{cardId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /rounds/{roundId} {
+
+      function isPlayer() {
+        return signedIn()
+          && exists(/databases/$(database)/documents/rounds/$(roundId)/players/$(request.auth.uid));
+      }
+
+      function round() {
+        return get(/databases/$(database)/documents/rounds/$(roundId)).data;
+      }
+
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if isPlayer() || isAdmin();
+      allow delete: if isAdmin();
+
+      // You add yourself to a round; you don't add other people.
+      match /players/{uid} {
+        allow read: if signedIn();
+        allow create: if isSelf(uid);
+        allow update, delete: if isSelf(uid) || isAdmin();
+      }
+
+      // REQUIREMENTS.md §4.2: each player enters their own score. Enforced here
+      // rather than only in the UI. When the deferred "group can edit anyone's
+      // score" feature lands, this is the rule that has to change.
+      match /scores/{scoreId} {
+        allow read: if signedIn();
+        allow create, update: if isPlayer() && request.resource.data.uid == request.auth.uid;
+        allow delete: if isAdmin();
+      }
+
+      // Hands honour the round's secret/open setting from REQUIREMENTS.md §4.4.
+      // Doing this in rules rather than the UI means "secret" actually means secret -
+      // a curious player cannot read a rival's hand out of the network tab.
+      match /hands/{uid} {
+        allow read: if isSelf(uid)
+          || isAdmin()
+          || round().settings.cardVisibility == 'open';
+        allow create, update: if isSelf(uid) || isAdmin();
+        allow delete: if isAdmin();
+      }
+
+      // The event feed is an append-only audit trail. Cards are honour-system, so
+      // this log is the only record of what happened - it must not be rewritable,
+      // and you can only speak as yourself.
+      match /events/{eventId} {
+        allow read: if signedIn();
+        allow create: if isPlayer() && request.resource.data.actorUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // Anything not matched above is denied.
+  }
+}
