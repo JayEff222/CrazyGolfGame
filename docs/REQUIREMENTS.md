@@ -189,3 +189,6 @@ Explicitly **never**: betting or money of any kind, weather integration.
 |---|---|
 | 2026-09-19 | Initial requirements captured from 37-question scoping session |
 | 2026-09-19 | Trangie scorecard transcribed and verified; hole imagery imported |
+| 2026-09-19 | Backend live: rules deployed, Firestore in australia-southeast1, Email/Password enabled |
+| 2026-09-19 | Admin reset password changed `1234` → `123456` (Firebase six-character floor) |
+| 2026-09-19 | Username email alias uses `crazygolf.invalid` (RFC 2606 reserved, can never reach a real mailbox) |
