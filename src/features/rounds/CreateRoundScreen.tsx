@@ -1,10 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/useAuth'
-import { createRound, joinRound } from '../../lib/rounds'
+import { createRound, joinRound, MAX_PLAYERS } from '../../lib/rounds'
 import type { TeeId } from '../../lib/course'
 import type { StoredCourse } from '../../lib/courseData'
 import { listCourses, loadTeeLengths, type TeeLengths } from './roundsData'
 import { rememberActiveRound } from './activeRound'
+import { CardPicker } from '../cards'
+import { loadCards } from '../../lib/cardsData'
+import type { Card } from '../../lib/cards'
 import { ChoiceGroup, type Choice } from './ChoiceGroup'
 import { GAME_TYPES, PLANNED_GAME_TYPES } from './gameTypes'
 import {
@@ -71,7 +74,22 @@ export function CreateRoundScreen({ onCreated, onCancel }: CreateRoundScreenProp
     }
   }, [courseId])
 
-  const setCards = (next: number) =>
+  const [catalogue, setCatalogue] = useState<Card[]>([])
+  useEffect(() => {
+    let live = true
+    loadCards()
+      .then((loaded) => {
+        if (live) setCatalogue(loaded)
+      })
+      .catch(() => {
+        // An empty catalogue is a valid round - you just play straight golf.
+      })
+    return () => {
+      live = false
+    }
+  }, [])
+
+  const setCardsPerPlayer = (next: number) =>
     setDraft((current) => ({ ...current, cardsPerPlayer: clampCardsPerPlayer(next) }))
 
   const submit = async (event: FormEvent) => {
@@ -192,7 +210,7 @@ export function CreateRoundScreen({ onCreated, onCancel }: CreateRoundScreenProp
                   type="button"
                   aria-label="Fewer cards"
                   disabled={draft.cardsPerPlayer <= MIN_CARDS_PER_PLAYER}
-                  onClick={() => setCards(draft.cardsPerPlayer - 1)}
+                  onClick={() => setCardsPerPlayer(draft.cardsPerPlayer - 1)}
                   className="tap-target rounded-xl border-2 border-fairway-300 px-5 text-2xl font-bold text-fairway-800 disabled:opacity-40"
                 >
                   −
@@ -207,7 +225,7 @@ export function CreateRoundScreen({ onCreated, onCancel }: CreateRoundScreenProp
                   type="button"
                   aria-label="More cards"
                   disabled={draft.cardsPerPlayer >= MAX_CARDS_PER_PLAYER}
-                  onClick={() => setCards(draft.cardsPerPlayer + 1)}
+                  onClick={() => setCardsPerPlayer(draft.cardsPerPlayer + 1)}
                   className="tap-target rounded-xl border-2 border-fairway-300 px-5 text-2xl font-bold text-fairway-800 disabled:opacity-40"
                 >
                   +
@@ -225,6 +243,25 @@ export function CreateRoundScreen({ onCreated, onCancel }: CreateRoundScreenProp
             Choosing the deck arrives with the card catalogue (Phase 6). This round is created
             with no cards selected, so nothing will be dealt yet.
           </p>
+
+          <div className="flex flex-col gap-3 border-t-2 border-fairway-100 pt-4">
+            <div>
+              <h3 className="text-base font-semibold text-fairway-900">Which cards are in play</h3>
+              <p className="text-sm text-fairway-700">
+                Tap to include or exclude. The full rule is on each card.
+              </p>
+            </div>
+            <CardPicker
+              cards={catalogue}
+              selectedIds={draft.selectedCardIds ?? []}
+              onChange={(selectedCardIds) =>
+                setDraft((current) => ({ ...current, selectedCardIds }))
+              }
+              minimumWanted={
+                draft.dealMode === 'fixed' ? draft.cardsPerPlayer * MAX_PLAYERS : undefined
+              }
+            />
+          </div>
         </section>
 
         {error !== null && (

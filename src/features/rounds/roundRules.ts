@@ -144,6 +144,8 @@ export interface SettingsDraft {
   readonly cardVisibility: CardVisibility
   readonly dealMode: DealMode
   readonly cardsPerPlayer: number
+  /** Cards chosen for this round. Empty means a straight round with no cards. */
+  readonly selectedCardIds?: readonly string[]
 }
 
 export const DEFAULT_SETTINGS_DRAFT: SettingsDraft = {
@@ -172,7 +174,7 @@ export function buildSettings(draft: SettingsDraft): RoundSettings {
     cardVisibility: draft.cardVisibility,
     dealMode: draft.dealMode,
     cardsPerPlayer: draft.dealMode === 'fixed' ? clampCardsPerPlayer(draft.cardsPerPlayer) : null,
-    selectedCardIds: [],
+    selectedCardIds: [...(draft.selectedCardIds ?? [])],
   }
 }
 
