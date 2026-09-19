@@ -37,17 +37,35 @@ no ads, no in-app purchases, no profit motive. It must cost nothing to run.
 - **Devices:** must work on any device — iOS, Android, desktop. One codebase.
 - **Accounts:** username + password. No email address. Username is unique and is
   the display identity.
-- **Password reset:** no self-service reset (no email on file). Instead, an
-  **admin reset**: JF opens the admin screen, selects a user, and their password
-  is set to `123456`. On next login the user is prompted (not forced) to change it
-  from their profile page.
+- **Password reset: there is none.** Decided 2026-09-19, after the original design
+  (an admin screen that sets a password to `123456`) turned out to be impossible to
+  build without breaking a hard constraint.
 
-  > **Changed from `1234` on 2026-09-19.** Firebase Auth hard-rejects passwords
-  > under six characters with `WEAK_PASSWORD` — verified against the live project —
-  > and the limit is only configurable by upgrading to Identity Platform, which
-  > needs the paid plan. `123456` is the shortest value that keeps the original
-  > intent: a number JF can read out over the phone. Open to a different choice,
-  > such as a per-reset random code like `golf-4821`.
+  > **Why it cannot be built.** A password lives in Firebase Auth, not Firestore, so
+  > no security rule can grant access to it. The client SDK's `updatePassword` acts
+  > only on the currently signed-in user and takes no uid. The admin API that *does*
+  > take a uid, `projects.accounts:update`, requires a Google OAuth credential with
+  > `cloud-platform` scope and the `firebaseauth.users.update` permission — a
+  > project-admin credential which, shipped in a phone app, would hand every player
+  > control of the entire project. Running it server-side instead means Cloud
+  > Functions, which requires the paid Blaze plan and breaks §5's $0 rule. And
+  > `sendPasswordResetEmail` is dead here because accounts are
+  > `<username>@crazygolf.invalid`, which by RFC 2606 can never receive mail.
+  > All four checked against the Firebase documentation rather than assumed.
+
+  **What exists instead:** an admin **user list** (T-2.4), so JF can at least see who
+  has an account — which also covers Q-4, since a stranger signing up would show up
+  there. A player who forgets their password has no route back in, and the sign-in
+  screen says so plainly rather than promising a reset that cannot happen.
+
+  **Options still open** if this ever bites:
+  1. Let a player optionally attach a real email address, enabling Firebase's own
+     reset flow — free and serverless, but it changes "no email address" above.
+  2. JF deletes the Auth account, freeing the username so they can sign up again.
+     Costs them their uid, which detaches their round history.
+
+  The `mustChangePassword` flag and its prompt on the profile screen are built and
+  wired, so whichever option is chosen later needs no further UI.
 - **Rejoin:** a player whose phone dies can log back in and land straight back in
   the in-progress round as themselves.
 
@@ -135,6 +153,24 @@ no ads, no in-app purchases, no profit motive. It must cost nothing to run.
 - The admin **cannot** void or cancel a card once played.
 - An **event feed** shows all card plays to the whole group.
 - No rarity tiers.
+- **Every player can read the whole deck** outside a round, not just the cards in
+  their hand. A card is honour-system, so knowing what is in the deck before you
+  are stood on a tee arguing about it is most of the game.
+- **Players rate cards** thumbs up or thumbs down — one vote each per card,
+  changeable, and the totals are visible to everyone. Added 2026-09-19 as the way
+  Q-3 ("which of these cards actually work") gets answered without anyone having
+  to hold an opinion until the drive home.
+- **Players can suggest cards.** Anyone writes a card and sends it to the admin,
+  who accepts it into the deck or rejects it with a reason. The suggester is shown
+  the decision. A suggestion is validated exactly as an admin-written card is,
+  including the twenty-character minimum on the rule.
+
+  > Suggestions live in their own collection, never in the catalogue, until they
+  > are accepted. The deck is what every round is dealt from; anyone being able to
+  > write into it directly would make "the admin edits the cards" meaningless.
+  > Accepted cards land **active**, which means selectable at setup — not dealt.
+  > The deck for each round is still chosen by hand, so nothing reaches a game
+  > unseen.
 
 ### 4.5 Profiles
 - Display name and a profile photo.
@@ -191,10 +227,13 @@ the admin reset described in §3.
 ## 7. Data model (Firestore)
 
 ```
-users/{uid}              username, displayName, avatarBase64, mustChangePassword, stats
+users/{uid}              username, displayName, avatar, mustChangePassword, createdAt
+  rounds/{roundId}       courseId, teeId, roomCode, joinedAt   <- this player's history
 courses/{courseId}       name, par, holeCount, tees[], location
   holes/{1..18}          par, strokeIndex, metres, green{center,polygon}, tee{center,polygon}
-cards/{cardId}           title, effect, timing, targetsOpponent, active
+cards/{cardId}           title, effect, category, timing, target, active, notes?
+cardVotes/{cardId}_{uid} cardId, uid, vote            <- one per player per card
+cardSuggestions/{id}     card fields, suggestedBy, status, reason?
 rounds/{roundId}         courseId, gameType, status, settings{...}
   players/{uid}          displayName, avatar, order
   scores/{uid}_{hole}    strokes, putts?, clubs[]?      <- reserved for future use
@@ -205,6 +244,27 @@ rounds/{roundId}         courseId, gameType, status, settings{...}
 Score documents are keyed per player per hole so two people entering scores
 simultaneously can never collide. Last-write-wins is acceptable for a group of friends.
 
+`cardVotes` is deliberately one flat collection rather than a subcollection under
+each card, so the whole tally is a single query instead of forty. The document id
+is `{cardId}_{uid}`, which makes "one vote per player per card" a property of the
+path — there is no way to hold two — and the rules check the id against the voter
+so nobody can write into another player's slot.
+
+**Never store `null` for an absent optional field.** Firestore cannot hold
+`undefined`, so the tempting shape is `notes: value ?? null` — but zod's
+`.optional()` means "may be undefined" and *rejects* null. Doing this made 8 of the
+20 starter cards fail validation and vanish from the app (found 2026-09-19). Use
+`deleteField()` when writing and normalise `null` to `undefined` when reading.
+
+`users/{uid}/rounds/{roundId}` is a player's own index of the rounds they have been
+in, written as they join (added 2026-09-19 for T-9.1). The rounds collection has no
+"which rounds is this player in" query, and the alternative — a collection-group
+query across every round's players — would need its own index and would let anyone
+enumerate everyone else's golf. Keeping the index under the player's own path means
+the query is a plain read of something they own, and the rules can say so in one
+line. Unlike the profile document above it, history is **not** readable by other
+players: rules do not cascade into subcollections, which is what makes that possible.
+
 ---
 
 ## 8. Open questions
@@ -213,8 +273,9 @@ simultaneously can never collide. Last-write-wins is acceptable for a group of f
 |---|---|---|
 | ~~Q-1~~ | ~~Which OSM green polygon belongs to which hole~~ | **Resolved 2026-09-19** — Trangie mapped via the course mapper; all 18 holes have a green and a tee, every distance within 25 m of the card |
 | ~~Q-2~~ | ~~Retroactive card play~~ | **Resolved 2026-09-19** — yes, allowed. Guide cutoff is the next player hitting, but the tee box stays open until the group leaves. Not enforced in code. See §4.4 |
-| Q-3 | Which of the 20 starter cards actually work | **Open — needs a play test.** The deck is a researched guess. Suspects: The String (works on the green, likely too strong) and Beat the Clock (punishes the group for one slow player). Rewrite in the in-app editor once played |
-| Q-4 | Does signup need an invite code | **Open.** Anyone with the URL can create an account. Nobody has the URL yet, but worth deciding before the link is shared around |
+| Q-3 | Which of the 40 cards actually work | **Open — needs a play test, but now instrumented.** The deck is a researched guess. Suspects: The String (works on the green, likely too strong) and Beat the Clock (punishes the group for one slow player). Players can now thumbs-up/down every card, so after Trangie the answer is a tally rather than a memory. Rewrite the losers in the in-app editor |
+| Q-4 | Does signup need an invite code | **Open, but no longer blind.** Anyone with the URL can still create an account; the admin user list (T-2.4) now makes an unexpected signup visible, so this is a detection question rather than a silent one. Still worth deciding before the link is shared around |
+| Q-5 | How does a locked-out player get back in | **Open.** §3 records why no reset can be built on the client. Two live options: an optional real email for Firebase's own reset flow, or JF deleting the Auth account so they can sign up again. Nothing needed until somebody actually forgets |
 
 ---
 
@@ -243,3 +304,12 @@ Explicitly **never**: betting or money of any kind, weather integration.
 | 2026-09-19 | Backend live: rules deployed, Firestore in australia-southeast1, Email/Password enabled |
 | 2026-09-19 | Admin reset password changed `1234` → `123456` (Firebase six-character floor) |
 | 2026-09-19 | Username email alias uses `crazygolf.invalid` (RFC 2606 reserved, can never reach a real mailbox) |
+| 2026-09-19 | **Admin password reset dropped** (§3). Not buildable on the client without a project-admin credential in the bundle or the paid Blaze plan; verified against the Firebase docs. Admin user list shipped in its place; raised as Q-5 |
+| 2026-09-19 | Phase 9 built: round history, per-round scorecard, player stats. Needed a **Finish round** action — nothing had ever moved a round off `in-progress` |
+| 2026-09-19 | Round history indexed at `users/{uid}/rounds/{roundId}` (§7), readable only by its owner. New `firestore.rules` block — **must be deployed** |
+| 2026-09-19 | Online/offline indicator (T-8.1) with a third "Syncing…" state, held until `waitForPendingWrites` resolves |
+| 2026-09-19 | Hole screen fixed for §5: the room code, player list and card settings used to render **above** the scoring stack for the whole round, so every hole started with a scroll. They now sit below it, collapsed |
+| 2026-09-19 | **Card-loading bug fixed.** `notes: x ?? null` plus zod `.optional()` meant the 8 starter cards without notes failed to parse, and the reader dropped failures silently — only 12 of 20 cards ever reached the app. Reader now normalises null and *reports* what it could not read |
+| 2026-09-19 | Deck grown to **40 cards** (v2): 20 more drawn from real golf games — Wolf, Skins, Snake, Bingo Bango Bongo, Sandies, Barkies, Arnies, Ferrets, the pre-1952 Stymie, Worst Ball, Shamble, Foursomes and others |
+| 2026-09-19 | Players can read the whole deck and rate every card (§4.4). Totals visible to all; one vote per player per card, enforced by the document id |
+| 2026-09-19 | Players can suggest cards; the admin accepts or rejects with a reason, and the suggester is shown the decision (§4.4) |

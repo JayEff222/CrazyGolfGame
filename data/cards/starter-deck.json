@@ -1,6 +1,6 @@
 {
   "$comment": "Starter deck, v1. Written 2026-09-19 to be play-tested and rewritten. Mechanics are adapted from real on-course games: One Club, the String game, Gruesomes, Worst Ball, and the charity-scramble sabotage challenges (No Look Shot, Hold My Beer, Beat the Clock, No Tap-Ins). Every card is honour-system - the app records the play, the players enforce the rule. Edit these in the app rather than here once the card editor lands.",
-  "version": 1,
+  "version": 2,
   "cards": [
     {
       "id": "mulligan",
@@ -193,6 +193,194 @@
       "target": "everyone",
       "active": true,
       "notes": "The lender chooses which club they hand over."
+    },
+    {
+      "id": "wolf",
+      "title": "Wolf",
+      "effect": "You are the Wolf on this hole. After each player tees off you may claim them as your partner - but you must call it before the next player hits. Claim nobody and you play the hole alone against all of them.",
+      "category": "group",
+      "timing": "hole-start",
+      "target": "everyone",
+      "active": true,
+      "notes": "From the Wolf game. The Wolf tees off last and decides on the walk."
+    },
+    {
+      "id": "skins",
+      "title": "Skins",
+      "effect": "This hole is a skin. The lowest score outright takes it; if two or more players tie, nobody wins and the skin carries to the next hole. Keep carrying until somebody wins one outright.",
+      "category": "group",
+      "timing": "hole-start",
+      "target": "everyone",
+      "active": true
+    },
+    {
+      "id": "snake",
+      "title": "Snake",
+      "effect": "The snake is loose. The next player to three-putt is holding it, and keeps holding it until somebody else three-putts. Whoever is holding it when the round ends hears about it all the way to the car park.",
+      "category": "group",
+      "timing": "green",
+      "target": "everyone",
+      "active": true,
+      "notes": "Three putts from on the putting surface. The fringe does not count."
+    },
+    {
+      "id": "bingo-bango-bongo",
+      "title": "Bingo Bango Bongo",
+      "effect": "Three points on this hole: one for the first ball on the green, one for the closest to the pin once everyone is on, and one for the first to hole out. Furthest from the hole always plays first.",
+      "category": "group",
+      "timing": "hole-start",
+      "target": "everyone",
+      "active": true,
+      "notes": "Playing out of turn to steal a point forfeits that point."
+    },
+    {
+      "id": "shamble",
+      "title": "Shamble",
+      "effect": "Everybody tees off, then everybody picks up and plays their second shot from wherever the best drive finished. From there it is your own ball and your own score all the way in.",
+      "category": "group",
+      "timing": "tee",
+      "target": "everyone",
+      "active": true
+    },
+    {
+      "id": "alternate-shot",
+      "title": "Alternate Shot",
+      "effect": "Pair up for this hole. Each pair plays one ball, taking alternate shots, and both partners write down the same score. Decide who is teeing off before anybody hits.",
+      "category": "group",
+      "timing": "hole-start",
+      "target": "everyone",
+      "active": true,
+      "notes": "Foursomes, properly. With three players it is one pair and one soloist."
+    },
+    {
+      "id": "aces-and-deuces",
+      "title": "Aces and Deuces",
+      "effect": "On this hole the lowest score takes two points and the highest score gives one away. Ties cancel out - if two players share the low score, nobody takes anything at all.",
+      "category": "group",
+      "timing": "hole-start",
+      "target": "everyone",
+      "active": true
+    },
+    {
+      "id": "longest-drive",
+      "title": "Longest Drive",
+      "effect": "Longest drive on this hole takes the honour on the next tee, whatever the scores say. It has to finish in play - a monster into the trees counts for nothing at all.",
+      "category": "group",
+      "timing": "tee",
+      "target": "everyone",
+      "active": true
+    },
+    {
+      "id": "sandie",
+      "title": "Sandie",
+      "effect": "Get up and down from a bunker in two or fewer from the moment you are in the sand, and take one stroke off your score for this hole. Declare it before anybody writes anything down.",
+      "category": "boost",
+      "timing": "anytime",
+      "target": "self",
+      "active": true
+    },
+    {
+      "id": "barkie",
+      "title": "Barkie",
+      "effect": "Hit a tree on this hole and still make par or better, and you take one stroke off your score. Declare it before anybody writes their score down.",
+      "category": "boost",
+      "timing": "anytime",
+      "target": "self",
+      "active": true,
+      "notes": "Somebody else has to have heard the tree. No silent barkies."
+    },
+    {
+      "id": "arnie",
+      "title": "Arnie",
+      "effect": "Make par on this hole without ever once standing on the fairway, and take one stroke off your score. Named for Arnold Palmer, who made an entire career out of it.",
+      "category": "boost",
+      "timing": "anytime",
+      "target": "self",
+      "active": true
+    },
+    {
+      "id": "ferret",
+      "title": "Ferret",
+      "effect": "Hole out from off the putting surface - a chip, a pitch, or a putt from the fringe - and take one stroke off your score for this hole.",
+      "category": "boost",
+      "timing": "anytime",
+      "target": "self",
+      "active": true
+    },
+    {
+      "id": "golden-ferret",
+      "title": "Golden Ferret",
+      "effect": "Hole out directly from a bunker and take two strokes off your score for this hole. If you had already been in a bunker earlier on the same hole, take three and enjoy yourself.",
+      "category": "boost",
+      "timing": "anytime",
+      "target": "self",
+      "active": true
+    },
+    {
+      "id": "the-stymie",
+      "title": "The Stymie",
+      "effect": "Name a player. Your ball stays exactly where it lies on the green and they have to play around it, over it, or off it. They may not ask you to mark it until you have holed out.",
+      "category": "attack",
+      "timing": "green",
+      "target": "opponent",
+      "active": true,
+      "notes": "The real rule of golf until 1952. It is the reason ball markers exist."
+    },
+    {
+      "id": "worst-ball",
+      "title": "Worst Ball",
+      "effect": "Name a player. From the tee on this hole they play two balls at every single shot, and must then carry on with the worse of the two, all the way into the hole.",
+      "category": "attack",
+      "timing": "tee",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "one-club-wonder",
+      "title": "One Club Wonder",
+      "effect": "Name a player. They play this entire hole, tee to green, with a single club of their own choosing. They may pick the putter, and they will regret it either way.",
+      "category": "attack",
+      "timing": "hole-start",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "flagstick-in",
+      "title": "Flagstick In",
+      "effect": "Name a player. Every putt they hit on this green must be played with the flagstick left in the hole, and nobody is allowed to tend it for them.",
+      "category": "attack",
+      "timing": "green",
+      "target": "opponent",
+      "active": true,
+      "notes": "Perfectly legal since 2019, which is exactly what makes it annoying."
+    },
+    {
+      "id": "play-it-as-it-lies",
+      "title": "Play It As It Lies",
+      "effect": "Name a player. For the rest of this hole they get no preferred lies, no rolling it over, and no tapping anything down. Whatever the course gives them, they play.",
+      "category": "attack",
+      "timing": "anytime",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "provisional-required",
+      "title": "Provisional Required",
+      "effect": "Name a player before they tee off. They must declare and hit a provisional ball however good the first one looked, then play the hole out with whichever they choose.",
+      "category": "attack",
+      "timing": "tee",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "rub-of-the-green",
+      "title": "Rub of the Green",
+      "effect": "A card has just been played on you. Toss a tee in the air: if it points at you when it lands, the card stands as written. If it points anywhere else, the card is void and both are spent.",
+      "category": "defence",
+      "timing": "response",
+      "target": "opponent",
+      "active": true,
+      "notes": "The fairest possible resolution, and completely unarguable."
     }
   ]
 }

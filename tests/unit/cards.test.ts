@@ -28,9 +28,9 @@ describe('the starter deck', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('has 20 cards', () => {
+  it('has 40 cards — 20 originals plus the 20 drawn from real golf games', () => {
     const result = validateDeck(starterDeck)
-    expect(result.ok && result.deck.cards).toHaveLength(20)
+    expect(result.ok && result.deck.cards).toHaveLength(40)
   })
 
   it('has no duplicate ids', () => {

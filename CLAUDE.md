@@ -23,6 +23,8 @@ React 19 · TypeScript 6 · Vite 8 · Tailwind 4 · Firebase (Firestore + Auth, 
    golf-data subscription.
 3. **Cards are honour-system.** The app records what was played, by whom, against whom,
    on which hole, and when. It **never** alters a score because of a card.
+   Only an admin writes to the `cards` catalogue. Player-written cards go to
+   `cardSuggestions` and reach the deck only when the admin accepts them.
 4. **Offline must keep working.** Any write path must survive being offline and sync on
    reconnect. Do not bypass Firestore's offline queue with raw `fetch`.
 5. **Sunlight-first UI.** Light theme, high contrast, minimum 3rem tap targets, reachable
@@ -48,6 +50,11 @@ React 19 · TypeScript 6 · Vite 8 · Tailwind 4 · Firebase (Firestore + Auth, 
 - Pure logic goes in `src/lib/` and is unit tested directly — do not bury maths in a
   component where it can only be reached through a render.
 - Metres everywhere. Never yards. The scorecard is metric and the players are Australian.
+- **Never write `null` for an absent optional field.** Firestore cannot store
+  `undefined`, so `notes: value ?? null` looks right — but zod's `.optional()` means
+  "may be undefined" and rejects `null`. That one character hid 8 of the 20 cards for
+  a whole phase. Use `deleteField()` to clear, and normalise `null` → `undefined` when
+  reading. And never drop a document that fails validation silently: report it.
 - Comments explain *why*, not *what*. Match the density of the surrounding code.
 
 ## Course data
@@ -88,6 +95,18 @@ server, which is also less likely to trip endpoint restrictions.
 
 If the CLI is unavailable entirely, rules can be published by pasting
 `firestore.rules` into the Firebase console under Firestore Database > Rules.
+
+### Playwright browsers will not launch locally
+
+ThreatLocker refuses to execute the browsers Playwright downloads into
+`%LOCALAPPDATA%\ms-playwright` — they fail with `spawn EPERM`. `npm run test:e2e`
+therefore only runs in CI, the same as the Firestore rules tests.
+
+To check an e2e change locally, point Playwright at the system Edge instead, which
+is allowed. Write a throwaway config with
+`projects: [{ name: 'edge', use: { ...devices['Pixel 7'], channel: 'msedge' } }]`,
+run `npx playwright test --config=<that file>`, and delete it afterwards. Do not
+commit that config — CI has real browsers and should use them.
 
 ## Attribution required
 

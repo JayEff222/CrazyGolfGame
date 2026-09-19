@@ -54,8 +54,19 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 
 - [x] **T-2.1** Username+password signup/login with the internal-domain alias; uniqueness and error states
 - [x] **T-2.2** Auth context, protected routes, session restore
-- [ ] **T-2.3** Profile screen — display name, avatar with client-side resize to base64 WebP
-- [ ] **T-2.4** Admin user list + "reset password to 123456" action, and the change-password prompt on next login
+- [x] **T-2.3** Profile screen — display name, avatar with client-side resize to base64 WebP
+  - Photo, name and password each save on their own; a failed password change cannot
+    discard a photo that already saved
+  - WebP first, JPEG fallback: `canvas.toDataURL` silently returns a PNG for an
+    unsupported type, so the result is checked against the type that was asked for
+- [~] **T-2.4** Admin user list + "reset password to 123456" action
+  - [x] Admin user list — every account, newest first, admins marked
+  - [ ] **Password reset — not built, and not buildable on the client.** Verified
+        2026-09-19 against the Firebase docs: `updatePassword` only ever acts on the
+        signed-in user, the API that takes a uid (`projects.accounts:update`) needs a
+        project-admin OAuth credential that must never ship in a phone app, and Cloud
+        Functions needs the paid Blaze plan. JF decided 2026-09-19 to leave it unbuilt.
+        See REQUIREMENTS.md §3
 
 ## Phase 3 — Round lifecycle
 
@@ -116,7 +127,22 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [x] **T-6.3** Card selection + deck view — the picker shows the full rule text, so it doubles as the way to read the deck
 - [x] **T-6.4** Seed the starter deck
   - [x] 20 cards written and validated (`data/cards/starter-deck.json`)
-  - [ ] Run `npm run seed:cards` — **JF**
+  - [ ] Run `npm run seed:cards` — **JF** (now 40 cards, deck v2)
+- [x] **T-6.5** **Bug: only 12 of 20 cards ever appeared.** `notes: x ?? null` in the
+      seed and in `saveCard`, against a zod `.optional()` that rejects null — and a
+      reader that skipped failures silently. The 8 cards without notes never parsed.
+      Reader now normalises null and reports what it could not read
+- [x] **T-6.6** 20 more cards from real golf games (Wolf, Skins, Snake, Bingo Bango
+      Bongo, Sandie, Barkie, Arnie, Ferret, Stymie, Worst Ball, Shamble, Foursomes…)
+- [x] **T-6.7** The deck screen — every player reads the full catalogue and rates
+      each card 👍/👎. One vote per player per card, made structural by the
+      `{cardId}_{uid}` document id. Feeds Q-3
+- [x] **T-6.8** Players suggest cards; admin accepts into the deck or rejects with a
+      reason; the suggester is shown the decision
+  - Validated through the same `validateDraft` as the admin editor, 20-character
+    minimum included — the wording is the mechanism
+  - Suggestions live in their own collection until accepted, so nobody writes
+    straight into the deck. **Needs the new `firestore.rules` deployed**
 
 ## Phase 7 — Cards in play
 
@@ -129,16 +155,30 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 
 ## Phase 8 — Offline hardening
 
-- [ ] **T-8.1** Firestore IndexedDB persistence + online/offline indicator
+- [x] **T-8.1** Firestore IndexedDB persistence + online/offline indicator
+  - Three states, not two: "Syncing…" holds until `waitForPendingWrites` resolves,
+    because back on the network and everything-actually-saved are different moments
 - [ ] **T-8.2** Playwright tests that drop the network mid-round and assert sync on reconnect
 - [ ] **T-8.3** Cache course data and satellite tiles for the round
 
 ## Phase 9 — History & polish
 
-- [ ] **T-9.1** Round history + per-round scorecard view
-- [ ] **T-9.2** Player stats
-- [ ] **T-9.3** Visual pass — PGA green, sunlight contrast, one-handed layout
-- [ ] **T-9.4** Hole-screen polish: distance + your score + everyone's scores, no scrolling
+- [x] **T-9.1** Round history + per-round scorecard view
+  - Needed a **Finish round** action first: nothing ever moved a round off
+    `in-progress`, so history had no finished golf to show
+  - Per-player index at `users/{uid}/rounds/{roundId}`, written on join. Needs the
+    matching `firestore.rules` block **deployed**
+  - The card is `ScorecardScreen` with `onSetScore` omitted — the read-only mode
+    Phase 4 left for exactly this
+- [x] **T-9.2** Player stats
+  - A round only counts towards an average once it is complete; a nine-hole walk-off
+    would otherwise flatter everyone who ever gave up in the rain
+- [~] **T-9.3** Visual pass — PGA green, sunlight contrast, one-handed layout
+  - [x] Tap-target floor asserted in e2e; clubhouse regrouped with admin actions last
+  - [ ] Sunlight contrast still unproven — needs a real screen outdoors at Trangie
+- [x] **T-9.4** Hole-screen polish: distance + your score + everyone's scores, no scrolling
+  - The real fault was the lobby chrome: room code, player list and card settings
+    rendered **above** the scoring stack all round. They now sit below it, collapsed
 
 ---
 

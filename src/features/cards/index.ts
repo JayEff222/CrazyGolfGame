@@ -42,6 +42,16 @@ export type { HandsState } from './useHands'
 export { useCardNotices } from './useCardNotices'
 export type { CardNotice, CardNoticesState } from './useCardNotices'
 
+export { CardGallery } from './CardGallery'
+export { SuggestCardForm } from './SuggestCardForm'
+export type { SuggestCardFormProps } from './SuggestCardForm'
+export { SuggestionReview } from './SuggestionReview'
+export {
+  markDecisionSeen,
+  readSeenDecisions,
+  unseenDecisions,
+} from './seenDecisions'
+
 export { CardEditor } from './CardEditor'
 export {
   EMPTY_DRAFT,

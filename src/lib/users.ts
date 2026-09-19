@@ -1,4 +1,12 @@
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  serverTimestamp,
+  type Timestamp,
+} from 'firebase/firestore'
 import { db } from './firebase'
 
 /** A player's profile, as stored in `users/{uid}`. */
@@ -15,20 +23,58 @@ export interface PlayerProfile {
   readonly mustChangePassword?: boolean
 }
 
+/** A profile plus the metadata only the admin list cares about. */
+export interface PlayerSummary extends PlayerProfile {
+  /** Milliseconds since the epoch, or null while the server timestamp settles. */
+  readonly createdAt: number | null
+}
+
 const profileRef = (uid: string) => doc(db, 'users', uid)
+
+const readProfile = (uid: string, data: Record<string, unknown>): PlayerProfile => ({
+  uid,
+  username: String(data.username ?? ''),
+  displayName: String(data.displayName ?? data.username ?? ''),
+  avatar: typeof data.avatar === 'string' ? data.avatar : undefined,
+  mustChangePassword: data.mustChangePassword === true,
+})
 
 export async function loadProfile(uid: string): Promise<PlayerProfile | null> {
   const snapshot = await getDoc(profileRef(uid))
-  if (!snapshot.exists()) return null
+  return snapshot.exists() ? readProfile(uid, snapshot.data()) : null
+}
 
-  const data = snapshot.data()
-  return {
-    uid,
-    username: String(data.username ?? ''),
-    displayName: String(data.displayName ?? data.username ?? ''),
-    avatar: typeof data.avatar === 'string' ? data.avatar : undefined,
-    mustChangePassword: data.mustChangePassword === true,
-  }
+/**
+ * Newest signup first, ties broken by username.
+ *
+ * A server timestamp reads as null on the writing device until it settles, and a
+ * pending one is by definition the newest signup there is - so it sorts to the
+ * top rather than the bottom. That is also why the admin list sorts client-side
+ * instead of using orderBy('createdAt'), which would drop those documents from
+ * the result entirely and hide exactly the account an admin is most likely to be
+ * looking for.
+ */
+export function byNewestSignup(a: PlayerSummary, b: PlayerSummary): number {
+  if (a.createdAt === b.createdAt) return a.username.localeCompare(b.username)
+  if (a.createdAt === null) return -1
+  if (b.createdAt === null) return 1
+  return b.createdAt - a.createdAt
+}
+
+/** Every account, newest first — the admin user list (T-2.4). */
+export async function listPlayers(): Promise<PlayerSummary[]> {
+  const snapshot = await getDocs(collection(db, 'users'))
+
+  return snapshot.docs
+    .map((entry) => {
+      const data = entry.data()
+      const createdAt = data.createdAt as Timestamp | null | undefined
+      return {
+        ...readProfile(entry.id, data),
+        createdAt: createdAt?.toMillis?.() ?? null,
+      }
+    })
+    .sort(byNewestSignup)
 }
 
 export async function createProfile(profile: PlayerProfile): Promise<void> {

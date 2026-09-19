@@ -1,11 +1,13 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { AuthProvider } from '../features/auth/AuthProvider'
 import { useAuth } from '../features/auth/useAuth'
 import { SignInScreen } from '../features/auth/SignInScreen'
+import { SyncIndicator } from '../features/offline/SyncIndicator'
 
 /*
- * Lazily loaded: the mapper pulls in Leaflet and is used by one admin, once per
- * course. There is no reason for every player to download it to enter a score.
+ * Lazily loaded so a player only downloads what they open. The mapper matters
+ * most - it pulls in Leaflet and is used by one admin, once per course - but the
+ * same applies to the card editor, the user list and the history screen.
  */
 const YardageScreen = lazy(() =>
   import('../features/play/YardageScreen').then((m) => ({ default: m.YardageScreen })),
@@ -19,8 +21,28 @@ const CardEditor = lazy(() =>
   import('../features/cards').then((m) => ({ default: m.CardEditor })),
 )
 
+const CardGallery = lazy(() =>
+  import('../features/cards').then((m) => ({ default: m.CardGallery })),
+)
+
+const SuggestionReview = lazy(() =>
+  import('../features/cards').then((m) => ({ default: m.SuggestionReview })),
+)
+
 const CourseMapper = lazy(() =>
   import('../features/admin/CourseMapper').then((m) => ({ default: m.CourseMapper })),
+)
+
+const UserListScreen = lazy(() =>
+  import('../features/admin/UserListScreen').then((m) => ({ default: m.UserListScreen })),
+)
+
+const ProfileScreen = lazy(() =>
+  import('../features/profile/ProfileScreen').then((m) => ({ default: m.ProfileScreen })),
+)
+
+const HistoryScreen = lazy(() =>
+  import('../features/history').then((m) => ({ default: m.HistoryScreen })),
 )
 
 function Loading() {
@@ -31,9 +53,6 @@ function Loading() {
   )
 }
 
-/**
- * Placeholder for the signed-in app. Replaced in Phase 3 by the round lifecycle.
- */
 /**
  * Shows the player's user ID with a copy button.
  *
@@ -74,62 +93,107 @@ function UserIdCard({ uid }: { uid: string }) {
   )
 }
 
-function Clubhouse({
-  onOpenMapper,
-  onOpenYardage,
-  onOpenRounds,
-  onOpenCardEditor,
+/** A pushed screen: one back button, one lazy boundary, the same on every route. */
+function Pushed({
+  onBack,
+  fallback = 'Loading…',
+  children,
 }: {
-  onOpenMapper: () => void
-  onOpenYardage: () => void
-  onOpenRounds: () => void
-  onOpenCardEditor: () => void
+  onBack: () => void
+  fallback?: string
+  children: ReactNode
 }) {
+  return (
+    <div className="flex min-h-full flex-col">
+      <button
+        type="button"
+        onClick={onBack}
+        className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
+      >
+        &lsaquo; Back
+      </button>
+      <Suspense fallback={<p className="p-6 text-fairway-700">{fallback}</p>}>{children}</Suspense>
+    </div>
+  )
+}
+
+function Clubhouse({ onOpen }: { onOpen: (screen: Screen) => void }) {
   const { profile, isAdmin, signOut } = useAuth()
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col gap-6 px-5 py-10">
-      <h1 className="font-display text-3xl font-bold text-fairway-700">
-        G&apos;day, {profile?.displayName ?? 'golfer'}
-      </h1>
-      <p className="text-fairway-800">
-        You&apos;re signed in. Rounds, scoring and cards land in the next phases.
-      </p>
+    <main className="mx-auto flex min-h-full w-full max-w-md flex-col gap-4 px-5 py-10">
+      <header className="flex flex-col gap-2">
+        <h1 className="font-display text-3xl font-bold text-fairway-700">
+          G&apos;day, {profile?.displayName ?? 'golfer'}
+        </h1>
+        <SyncIndicator />
+      </header>
 
       <button
         type="button"
-        onClick={onOpenRounds}
-        className="tap-target rounded-xl bg-fairway-700 px-6 text-lg font-bold text-white active:bg-fairway-800"
+        onClick={() => onOpen('rounds')}
+        className="tap-target rounded-xl bg-fairway-700 px-6 py-4 text-lg font-bold text-white active:bg-fairway-800"
       >
         Play a round
       </button>
 
       <button
         type="button"
-        onClick={onOpenYardage}
-        className="tap-target rounded-xl border-2 border-fairway-600 px-6 text-lg font-bold text-fairway-800"
+        onClick={() => onOpen('yardage')}
+        className="tap-target rounded-xl border-2 border-fairway-600 px-6 py-4 text-lg font-bold text-fairway-800"
       >
         Yardage to the green
       </button>
 
-      {isAdmin && (
-        <button
-          type="button"
-          onClick={onOpenMapper}
-          className="tap-target rounded-xl bg-fairway-700 px-6 text-base font-bold text-white active:bg-fairway-800"
-        >
-          Course mapper
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => onOpen('history')}
+        className="tap-target rounded-xl border-2 border-fairway-600 px-6 py-4 text-lg font-bold text-fairway-800"
+      >
+        Your golf
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onOpen('deck')}
+        className="tap-target rounded-xl border-2 border-fairway-600 px-6 py-4 text-lg font-bold text-fairway-800"
+      >
+        The deck
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onOpen('profile')}
+        className="tap-target rounded-xl border-2 border-fairway-300 px-6 text-base font-semibold text-fairway-800"
+      >
+        Your profile
+      </button>
 
       {isAdmin && (
-        <button
-          type="button"
-          onClick={onOpenCardEditor}
-          className="tap-target rounded-xl border-2 border-fairway-600 px-6 text-base font-bold text-fairway-800"
-        >
-          Edit the cards
-        </button>
+        <>
+          <h2 className="mt-2 text-sm font-bold tracking-wide text-fairway-700 uppercase">Admin</h2>
+          <button
+            type="button"
+            onClick={() => onOpen('course-mapper')}
+            className="tap-target rounded-xl bg-fairway-700 px-6 text-base font-bold text-white active:bg-fairway-800"
+          >
+            Course mapper
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpen('card-editor')}
+            className="tap-target rounded-xl border-2 border-fairway-600 px-6 text-base font-bold text-fairway-800"
+          >
+            Edit the cards
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpen('users')}
+            className="tap-target rounded-xl border-2 border-fairway-600 px-6 text-base font-bold text-fairway-800"
+          >
+            Players
+          </button>
+        </>
       )}
 
       {profile !== null && <UserIdCard uid={profile.uid} />}
@@ -145,11 +209,29 @@ function Clubhouse({
 }
 
 /**
- * Screen selection is a bit of state for now rather than a router.
- * A real router arrives with the round lifecycle in Phase 3, which is the point
- * where shareable URLs (a join link, a specific hole) actually start to matter.
+ * Screen selection is a bit of state rather than a router.
+ * A round is a single sitting on one device and the only thing anyone shares is
+ * the room code, read aloud - so there is still nothing here that needs a URL.
  */
-type Screen = 'clubhouse' | 'course-mapper' | 'yardage' | 'rounds' | 'card-editor'
+type Screen =
+  | 'clubhouse'
+  | 'course-mapper'
+  | 'yardage'
+  | 'rounds'
+  | 'card-editor'
+  | 'users'
+  | 'profile'
+  | 'history'
+  | 'deck'
+  | 'suggestions'
+
+/** Screens only an admin may open. Checked here, and again by the rules. */
+const ADMIN_ONLY: ReadonlySet<Screen> = new Set<Screen>([
+  'course-mapper',
+  'card-editor',
+  'users',
+  'suggestions',
+])
 
 function Gate() {
   const { status, isAdmin } = useAuth()
@@ -158,82 +240,71 @@ function Gate() {
   if (status === 'loading') return <Loading />
   if (status === 'signed-out') return <SignInScreen />
 
-  if (screen === 'card-editor' && isAdmin) {
-    return (
-      <div className="flex min-h-full flex-col">
-        <button
-          type="button"
-          onClick={() => setScreen('clubhouse')}
-          className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
-        >
-          &lsaquo; Back
-        </button>
-        <Suspense fallback={<p className="p-6 text-fairway-700">Loading…</p>}>
+  const home = () => setScreen('clubhouse')
+  // An admin screen opened by someone who is no longer an admin falls back to the
+  // clubhouse rather than rendering a screen Firestore would refuse to fill.
+  const current = ADMIN_ONLY.has(screen) && !isAdmin ? 'clubhouse' : screen
+
+  switch (current) {
+    case 'card-editor':
+      return (
+        <Pushed onBack={home}>
           <CardEditor />
-        </Suspense>
-      </div>
-    )
-  }
-
-  if (screen === 'rounds') {
-    return (
-      <div className="flex min-h-full flex-col">
-        <button
-          type="button"
-          onClick={() => setScreen('clubhouse')}
-          className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
-        >
-          &lsaquo; Back
-        </button>
-        <Suspense fallback={<p className="p-6 text-fairway-700">Loading…</p>}>
-          <RoundsHome />
-        </Suspense>
-      </div>
-    )
-  }
-
-  if (screen === 'yardage') {
-    return (
-      <div className="flex min-h-full flex-col">
-        <button
-          type="button"
-          onClick={() => setScreen('clubhouse')}
-          className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
-        >
-          &lsaquo; Back
-        </button>
-        <Suspense fallback={<p className="p-6 text-fairway-700">Finding you…</p>}>
-          <YardageScreen />
-        </Suspense>
-      </div>
-    )
-  }
-
-  if (screen === 'course-mapper' && isAdmin) {
-    return (
-      <div className="flex min-h-full flex-col">
-        <button
-          type="button"
-          onClick={() => setScreen('clubhouse')}
-          className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
-        >
-          ‹ Back
-        </button>
-        <Suspense fallback={<p className="p-6 text-fairway-700">Loading the map…</p>}>
+        </Pushed>
+      )
+    case 'users':
+      return (
+        <Pushed onBack={home}>
+          <UserListScreen />
+        </Pushed>
+      )
+    case 'course-mapper':
+      return (
+        <Pushed onBack={home} fallback="Loading the map…">
           <CourseMapper />
-        </Suspense>
-      </div>
-    )
+        </Pushed>
+      )
+    case 'rounds':
+      return (
+        <Pushed onBack={home}>
+          <RoundsHome />
+        </Pushed>
+      )
+    case 'yardage':
+      return (
+        <Pushed onBack={home} fallback="Finding you…">
+          <YardageScreen />
+        </Pushed>
+      )
+    case 'profile':
+      return (
+        <Pushed onBack={home}>
+          <ProfileScreen onDone={home} />
+        </Pushed>
+      )
+    case 'history':
+      return (
+        <Pushed onBack={home}>
+          <HistoryScreen />
+        </Pushed>
+      )
+    case 'deck':
+      return (
+        <Pushed onBack={home}>
+          <CardGallery
+            onReviewSuggestions={isAdmin ? () => setScreen('suggestions') : undefined}
+          />
+        </Pushed>
+      )
+    case 'suggestions':
+      return (
+        <Pushed onBack={() => setScreen('deck')}>
+          <SuggestionReview onDone={() => setScreen('deck')} />
+        </Pushed>
+      )
+    default:
+      return <Clubhouse onOpen={setScreen} />
   }
-
-  return (
-    <Clubhouse
-      onOpenMapper={() => setScreen('course-mapper')}
-      onOpenYardage={() => setScreen('yardage')}
-      onOpenRounds={() => setScreen('rounds')}
-      onOpenCardEditor={() => setScreen('card-editor')}
-    />
-  )
 }
 
 export function App() {

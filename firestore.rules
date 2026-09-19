@@ -40,6 +40,19 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create, update: if isSelf(uid) || isAdmin();
       allow delete: if isAdmin();
+
+      // Which rounds this player has been in (T-9.1). Firestore rules do not
+      // cascade into subcollections, so this needs saying even though the parent
+      // document is already covered above.
+      //
+      // Written by the player as they join, and read back as their history. Kept
+      // per-user rather than queried out of the rounds collection because a
+      // collection-group query over every round's players would need its own
+      // index and would let anyone enumerate everyone's golf. This way a player's
+      // history is theirs, and the query is a plain read of a path they own.
+      match /rounds/{roundId} {
+        allow read, write: if isSelf(uid) || isAdmin();
+      }
     }
 
     // Course data is reference data: everyone reads it, only an admin edits it.
@@ -58,6 +71,34 @@ service cloud.firestore {
     match /cards/{cardId} {
       allow read: if signedIn();
       allow write: if isAdmin();
+    }
+
+    // Thumbs up / thumbs down on a card. Everyone sees the totals, so a vote has
+    // to be worth something: the document id is `{cardId}_{uid}`, which makes one
+    // vote per player per card a property of the path rather than a hope. The id
+    // check is what stops somebody writing a vote into another player's slot.
+    match /cardVotes/{voteId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && voteId == request.resource.data.cardId + '_' + request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Cards players have written and sent to the admin for a decision.
+    //
+    // Readable by the person who suggested it and by an admin, and by nobody
+    // else - a rejection is between the two of them. A listing therefore has to
+    // filter on suggestedBy, which the suggestion library does.
+    match /cardSuggestions/{suggestionId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.suggestedBy == request.auth.uid);
+      // A suggestion always arrives pending and always in your own name. Nobody
+      // gets to submit a pre-approved card, or one attributed to someone else.
+      allow create: if signedIn()
+        && request.resource.data.suggestedBy == request.auth.uid
+        && request.resource.data.status == 'pending';
+      // Only the admin decides, and the decision is the only thing that changes.
+      allow update, delete: if isAdmin();
     }
 
     match /rounds/{roundId} {

@@ -108,6 +108,165 @@ describe('profiles', () => {
   })
 })
 
+describe('card votes', () => {
+  // The document id is `{cardId}_{uid}`, which is what makes one vote per player
+  // per card structural rather than hopeful. The rules check it matches.
+  it('can be cast by a player in their own slot', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(ALICE), 'cardVotes', `mulligan_${ALICE}`), {
+        cardId: 'mulligan',
+        uid: ALICE,
+        vote: 'up',
+      }),
+    )
+  })
+
+  it('cannot be written into another player’s slot', async () => {
+    await assertFails(
+      setDoc(doc(as(BOB), 'cardVotes', `mulligan_${ALICE}`), {
+        cardId: 'mulligan',
+        uid: ALICE,
+        vote: 'up',
+      }),
+    )
+  })
+
+  it('cannot be cast under an id that does not match the voter', async () => {
+    // Without the id check a player could hold unlimited votes on one card by
+    // inventing new document ids, and the tally everyone sees would be worthless.
+    await assertFails(
+      setDoc(doc(as(ALICE), 'cardVotes', 'mulligan_extra'), {
+        cardId: 'mulligan',
+        uid: ALICE,
+        vote: 'up',
+      }),
+    )
+  })
+
+  it('is readable by everyone, because the totals are shown to everyone', async () => {
+    await assertSucceeds(getDoc(doc(as(BOB), 'cardVotes', `mulligan_${ALICE}`)))
+  })
+
+  it('cannot be touched by a signed-out visitor', async () => {
+    await assertFails(
+      setDoc(doc(anon(), 'cardVotes', `mulligan_${ALICE}`), {
+        cardId: 'mulligan',
+        uid: ALICE,
+        vote: 'up',
+      }),
+    )
+  })
+})
+
+describe('card suggestions', () => {
+  const suggestion = (suggestedBy: string, overrides: Record<string, unknown> = {}) => ({
+    cardId: 'two-club-special',
+    title: 'Two Club Special',
+    effect: 'Play the whole hole using only two clubs of your own choosing.',
+    category: 'attack',
+    timing: 'hole-start',
+    target: 'opponent',
+    active: true,
+    suggestedBy,
+    suggestedByName: 'Alice',
+    status: 'pending',
+    ...overrides,
+  })
+
+  it('can be created by the player who wrote it', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(ALICE), 'cardSuggestions', 'sug-1'), suggestion(ALICE)),
+    )
+  })
+
+  it('cannot be attributed to somebody else', async () => {
+    await assertFails(setDoc(doc(as(BOB), 'cardSuggestions', 'sug-2'), suggestion(ALICE)))
+  })
+
+  it('cannot arrive pre-approved', async () => {
+    // Otherwise "the admin decides what is in the deck" means nothing.
+    await assertFails(
+      setDoc(doc(as(ALICE), 'cardSuggestions', 'sug-3'), suggestion(ALICE, { status: 'accepted' })),
+    )
+  })
+
+  it('is readable by the player who wrote it', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'cardSuggestions', 'sug-4'), suggestion(ALICE))
+    })
+    await assertSucceeds(getDoc(doc(as(ALICE), 'cardSuggestions', 'sug-4')))
+  })
+
+  it('is not readable by another player — a rejection is nobody else’s business', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'cardSuggestions', 'sug-5'), suggestion(ALICE))
+    })
+    await assertFails(getDoc(doc(as(BOB), 'cardSuggestions', 'sug-5')))
+  })
+
+  it('is readable by an admin, who has to decide on it', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'cardSuggestions', 'sug-6'), suggestion(ALICE))
+    })
+    await assertSucceeds(getDoc(doc(as(ADMIN), 'cardSuggestions', 'sug-6')))
+  })
+
+  it('is decided by the admin alone', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'cardSuggestions', 'sug-7'), suggestion(ALICE))
+    })
+
+    await assertSucceeds(
+      setDoc(doc(as(ADMIN), 'cardSuggestions', 'sug-7'), { status: 'accepted' }, { merge: true }),
+    )
+  })
+
+  it('cannot be self-approved by the player who wrote it', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'cardSuggestions', 'sug-8'), suggestion(ALICE))
+    })
+
+    await assertFails(
+      setDoc(doc(as(ALICE), 'cardSuggestions', 'sug-8'), { status: 'accepted' }, { merge: true }),
+    )
+  })
+
+  it('does not let a player write straight into the card catalogue', async () => {
+    // The whole reason suggestions exist as a separate collection.
+    await assertFails(
+      setDoc(doc(as(ALICE), 'cards', 'two-club-special'), { title: 'Two Club Special' }),
+    )
+  })
+})
+
+describe('a player’s round history', () => {
+  it('can be written by the player as they join a round', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(ALICE), 'users', ALICE, 'rounds', ROUND), { courseId: 'trangie' }),
+    )
+  })
+
+  it('can be read back by the player it belongs to', async () => {
+    await assertSucceeds(getDoc(doc(as(ALICE), 'users', ALICE, 'rounds', ROUND)))
+  })
+
+  it('cannot be read by another player — your golf is your business', async () => {
+    // Profiles are readable by everyone because the leaderboard needs names.
+    // History is not, and rules do not cascade, so this is a separate decision.
+    await assertFails(getDoc(doc(as(BOB), 'users', ALICE, 'rounds', ROUND)))
+  })
+
+  it('cannot be written by another player', async () => {
+    await assertFails(
+      setDoc(doc(as(BOB), 'users', ALICE, 'rounds', ROUND), { courseId: 'somewhere-else' }),
+    )
+  })
+
+  it('cannot be touched by a signed-out visitor', async () => {
+    await assertFails(getDoc(doc(anon(), 'users', ALICE, 'rounds', ROUND)))
+  })
+})
+
 describe('scores', () => {
   it('can be written by the player they belong to', async () => {
     await assertSucceeds(

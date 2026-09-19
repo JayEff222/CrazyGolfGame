@@ -19,7 +19,7 @@ import { dirname, join } from 'node:path'
 import { createInterface } from 'node:readline'
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-import { getFirestore, doc, writeBatch, serverTimestamp } from 'firebase/firestore'
+import { getFirestore, doc, writeBatch, deleteField, serverTimestamp } from 'firebase/firestore'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -82,7 +82,9 @@ for (const card of deck.cards) {
       timing: card.timing,
       target: card.target,
       active: card.active,
-      notes: card.notes ?? null,
+      // Never null: zod's .optional() rejects null, so a null here made the card
+      // unreadable and it vanished from the app. Absent means absent.
+      notes: card.notes ?? deleteField(),
       deckVersion: deck.version,
       updatedAt: serverTimestamp(),
     },

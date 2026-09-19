@@ -4,6 +4,7 @@ import { InProgressRound } from './InProgressRound'
 import { dealRoundCards, DealSummary, type DealSummaryData } from '../cards'
 import {
   MAX_PLAYERS,
+  completeRound,
   leaveRound,
   recordEvent,
   setRoundStatus,
@@ -12,6 +13,7 @@ import {
   type Round,
   type RoundPlayer,
 } from '../../lib/rounds'
+import { SyncIndicator } from '../offline/SyncIndicator'
 import { loadCourse } from '../../lib/courseData'
 import { forgetActiveRound, rememberActiveRound } from './activeRound'
 import { RoomCode } from './RoomCode'
@@ -80,6 +82,7 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
+  const [confirmFinish, setConfirmFinish] = useState(false)
   const [deal, setDeal] = useState<DealSummaryData | null>(null)
 
   useEffect(() => {
@@ -185,19 +188,42 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
     }
   }
 
+  /*
+   * T-9.1 - somebody has to close the round.
+   *
+   * Nothing moved a round off 'in-progress' before this, so every round stayed
+   * open forever and history had no finished golf in it. The host calls it, the
+   * same person who started it, and it is confirmed because scores stay editable
+   * right until the round closes.
+   */
+  const finish = async () => {
+    setError(null)
+    setBusy(true)
+    try {
+      await completeRound(round.id, uid)
+      forgetActiveRound(uid)
+      setConfirmFinish(false)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not finish the round.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const started = round.status !== 'lobby'
+  const finished = round.status === 'complete'
 
-  return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col gap-6 px-5 py-8">
-      <header className="flex flex-col gap-1">
-        <h1 className="font-display text-3xl font-bold text-fairway-700">
-          {started ? 'Round in progress' : 'Lobby'}
-        </h1>
-        <p className="text-base text-fairway-800">
-          {courseName ?? round.courseId} · {describeTee(round.teeId)} · {gameLabel}
-        </p>
-      </header>
-
+  /*
+   * T-9.4 - the room code, the player list and the card settings.
+   *
+   * Vital in the lobby, and dead weight once the round is under way: they used
+   * to sit above the scoring stack, which meant scrolling past four sections to
+   * reach the score entry on every hole. REQUIREMENTS.md §5 calls the hole screen
+   * the critical one and says it must work without scrolling, so once play
+   * starts these move below it and collapse.
+   */
+  const roundDetails = (
+    <>
       <RoomCode code={round.roomCode} compact={started} />
 
       <section className="flex flex-col gap-3">
@@ -226,6 +252,34 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
           </p>
         )}
       </section>
+    </>
+  )
+
+  return (
+    <main
+      className={`mx-auto flex min-h-full w-full max-w-md flex-col px-5 ${
+        started ? 'gap-3 py-4' : 'gap-6 py-8'
+      }`}
+    >
+      <header className="flex flex-col gap-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <h1
+            className={`font-display font-bold text-fairway-700 ${
+              started ? 'text-xl' : 'text-3xl'
+            }`}
+          >
+            {finished ? 'Round complete' : started ? 'Round in progress' : 'Lobby'}
+          </h1>
+          {/* T-8.1: the one screen a player is on for four hours is the one that
+              has to answer "did that score actually save?" without being asked. */}
+          <SyncIndicator />
+        </div>
+        <p className={started ? 'text-sm text-fairway-700' : 'text-base text-fairway-800'}>
+          {courseName ?? round.courseId} · {describeTee(round.teeId)} · {gameLabel}
+        </p>
+      </header>
+
+      {!started && roundDetails}
 
       {error !== null && (
         <p
@@ -238,12 +292,69 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
 
       {started ? (
         <section className="flex flex-col gap-3">
+          {finished && (
+            <p
+              role="status"
+              className="rounded-xl bg-fairway-100 px-4 py-3 text-base font-semibold text-fairway-900"
+            >
+              Round finished. The card is in your golf history.
+            </p>
+          )}
+
           {/* Shown to whoever pressed Start, so the deal is visible rather than silent. */}
           {deal !== null && <DealSummary summary={deal} />}
           <InProgressRound round={round} selfUid={uid} />
-          <p className="text-sm text-fairway-700">
-            Leave this screen and come back any time — you will land straight back in this round.
-          </p>
+
+          {/* Everything below here is reference, not play. Collapsed by default so
+              the scoring stack above it starts at the top of the screen. */}
+          <details className="rounded-xl bg-white ring-1 ring-fairway-200">
+            <summary className="tap-target flex cursor-pointer items-center px-4 text-base font-semibold text-fairway-800">
+              Round details
+            </summary>
+            <div className="flex flex-col gap-4 px-4 pt-2 pb-4">{roundDetails}</div>
+          </details>
+
+          {!finished && (
+            <p className="text-sm text-fairway-700">
+              Leave this screen and come back any time — you will land straight back in this round.
+            </p>
+          )}
+
+          {isHost && !finished && (
+            confirmFinish ? (
+              <div className="flex flex-col gap-2 rounded-xl border-2 border-fairway-600 p-3">
+                <p className="text-base font-semibold text-fairway-900">
+                  Finish the round for everyone? Scores stop being editable.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void finish()}
+                    disabled={busy}
+                    className="tap-target flex-1 rounded-xl bg-fairway-700 px-4 text-base font-bold text-white disabled:opacity-60"
+                  >
+                    {busy ? 'Finishing…' : 'Yes, finish'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmFinish(false)}
+                    className="tap-target flex-1 rounded-xl border-2 border-fairway-300 px-4 text-base font-semibold text-fairway-800"
+                  >
+                    Keep playing
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmFinish(true)}
+                className="tap-target rounded-xl border-2 border-fairway-600 px-6 text-base font-bold text-fairway-800"
+              >
+                Finish round
+              </button>
+            )
+          )}
+
           <button
             type="button"
             onClick={onExit}

@@ -35,6 +35,7 @@ vi.mock('../../src/lib/rounds', async (importOriginal) => {
     setRoundStatus: vi.fn(),
     recordEvent: vi.fn(),
     leaveRound: vi.fn(),
+    completeRound: vi.fn(),
   }
 })
 
@@ -82,6 +83,7 @@ beforeEach(() => {
   vi.mocked(rounds.setRoundStatus).mockReset().mockResolvedValue(undefined)
   vi.mocked(rounds.recordEvent).mockReset().mockResolvedValue(undefined)
   vi.mocked(rounds.leaveRound).mockReset().mockResolvedValue(undefined)
+  vi.mocked(rounds.completeRound).mockReset().mockResolvedValue(undefined)
   onExit.mockReset()
 })
 
@@ -190,5 +192,104 @@ describe('LobbyScreen', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('no signal')
     expect(rounds.recordEvent).not.toHaveBeenCalled()
+  })
+})
+
+/*
+ * T-9.4 - the critical screen.
+ *
+ * REQUIREMENTS.md §5: distance, your score and everyone else's have to be
+ * reachable without scrolling. The lobby chrome used to sit above the scoring
+ * stack, so every hole began with a scroll past a room code and a player list.
+ */
+describe('the hole screen layout', () => {
+  const started = round({ status: 'in-progress' })
+  const both = [player('uid-jf', 'JF', 0), player('uid-dave', 'Dave', 1)]
+
+  it('puts scoring above the round details, not below them', async () => {
+    showLobby(started, both)
+
+    const scoring = await screen.findByTestId('in-progress-round')
+    const details = screen.getByText('Round details')
+
+    // DOCUMENT_POSITION_FOLLOWING: the details come after the scoring stack.
+    expect(scoring.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('keeps the room code and player list collapsed while playing', async () => {
+    showLobby(started, both)
+    await screen.findByTestId('in-progress-round')
+
+    const details = screen.getByText('Round details').closest('details')
+    expect(details).not.toBeNull()
+    expect(details).not.toHaveAttribute('open')
+    // Still reachable — collapsed, not removed. Somebody always arrives late.
+    expect(details).toContainElement(screen.getByText('QF7K'))
+  })
+
+  it('still shows the lobby in full before anyone tees off', async () => {
+    showLobby(round(), both)
+
+    expect(await screen.findByText('QF7K')).toBeInTheDocument()
+    expect(screen.queryByText('Round details')).not.toBeInTheDocument()
+  })
+})
+
+/*
+ * T-9.1 - closing a round.
+ *
+ * Nothing moved a round off 'in-progress' before this, so nothing ever reached
+ * history. The host closes it, and only after confirming, because scores stay
+ * editable right up to that moment.
+ */
+describe('finishing a round', () => {
+  const started = round({ status: 'in-progress' })
+  const both = [player('uid-jf', 'JF', 0), player('uid-dave', 'Dave', 1)]
+
+  it('lets the host finish, but only after confirming', async () => {
+    const user = userEvent.setup()
+    showLobby(started, both)
+
+    await user.click(await screen.findByRole('button', { name: 'Finish round' }))
+    expect(rounds.completeRound).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Yes, finish' }))
+    expect(rounds.completeRound).toHaveBeenCalledWith('round-1', 'uid-jf')
+  })
+
+  it('lets the host change their mind', async () => {
+    const user = userEvent.setup()
+    showLobby(started, both)
+
+    await user.click(await screen.findByRole('button', { name: 'Finish round' }))
+    await user.click(screen.getByRole('button', { name: 'Keep playing' }))
+
+    expect(rounds.completeRound).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Finish round' })).toBeInTheDocument()
+  })
+
+  it('does not offer the button to a player who is not the host', async () => {
+    showLobby(started, both, 'uid-dave')
+
+    await screen.findByTestId('in-progress-round')
+    expect(screen.queryByRole('button', { name: 'Finish round' })).not.toBeInTheDocument()
+  })
+
+  it('says the round is over once it is complete, and offers no way to re-finish it', async () => {
+    showLobby(round({ status: 'complete' }), both)
+
+    expect(await screen.findByRole('heading', { name: 'Round complete' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Finish round' })).not.toBeInTheDocument()
+  })
+
+  it('surfaces a failure to finish rather than claiming the round closed', async () => {
+    const user = userEvent.setup()
+    vi.mocked(rounds.completeRound).mockRejectedValue(new Error('no signal'))
+    showLobby(started, both)
+
+    await user.click(await screen.findByRole('button', { name: 'Finish round' }))
+    await user.click(screen.getByRole('button', { name: 'Yes, finish' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('no signal')
   })
 })

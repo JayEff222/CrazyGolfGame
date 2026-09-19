@@ -132,8 +132,10 @@ export function SignInScreen() {
         </button>
       </form>
 
+      {/* No self-service reset exists and none can be built on the client - see
+          REQUIREMENTS.md §3 - so this must not promise one. */}
       <p className="text-center text-sm text-fairway-600">
-        No email needed. If you forget your password, ask JF to reset it.
+        No email needed. Your password cannot be recovered, so pick one you will remember.
       </p>
     </main>
   )
