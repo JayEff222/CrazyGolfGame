@@ -14,6 +14,18 @@ import { memoryStorage } from './support/memoryStorage'
  * been deleted.
  */
 
+/*
+ * The in-progress round renders the whole scoring stack, which is covered by its
+ * own tests. Stubbing it here keeps these tests about lobby behaviour - which
+ * view is shown, who may start - rather than dragging Firestore subscriptions
+ * into a test about a player list.
+ */
+vi.mock('../../src/features/rounds/InProgressRound', () => ({
+  InProgressRound: ({ selfUid }: { selfUid: string }) => (
+    <div data-testid="in-progress-round">playing as {selfUid}</div>
+  ),
+}))
+
 vi.mock('../../src/lib/firebase', () => ({ app: {}, auth: {}, db: {} }))
 
 vi.mock('../../src/lib/rounds', async (importOriginal) => {

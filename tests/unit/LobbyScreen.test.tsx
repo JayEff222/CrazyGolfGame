@@ -12,6 +12,18 @@ import { renderWithAuth, testProfile } from './support/renderWithAuth'
  * starts it, and only once there are enough players.
  */
 
+/*
+ * The in-progress round renders the whole scoring stack, which is covered by its
+ * own tests. Stubbing it here keeps these tests about lobby behaviour - which
+ * view is shown, who may start - rather than dragging Firestore subscriptions
+ * into a test about a player list.
+ */
+vi.mock('../../src/features/rounds/InProgressRound', () => ({
+  InProgressRound: ({ selfUid }: { selfUid: string }) => (
+    <div data-testid="in-progress-round">playing as {selfUid}</div>
+  ),
+}))
+
 vi.mock('../../src/lib/firebase', () => ({ app: {}, auth: {}, db: {} }))
 
 vi.mock('../../src/lib/rounds', async (importOriginal) => {
@@ -125,7 +137,8 @@ describe('LobbyScreen', () => {
 
     expect(await screen.findByRole('heading', { name: 'Round in progress' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Start round' })).not.toBeInTheDocument()
-    expect(screen.getByText(/hole 1/i)).toBeInTheDocument()
+    // The lobby hands over to the scoring view rather than a placeholder.
+    expect(await screen.findByTestId('in-progress-round')).toBeInTheDocument()
   })
 
   it('shows the card settings the round was created with', async () => {

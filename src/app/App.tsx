@@ -11,6 +11,10 @@ const YardageScreen = lazy(() =>
   import('../features/play/YardageScreen').then((m) => ({ default: m.YardageScreen })),
 )
 
+const RoundsHome = lazy(() =>
+  import('../features/rounds').then((m) => ({ default: m.RoundsHome })),
+)
+
 const CourseMapper = lazy(() =>
   import('../features/admin/CourseMapper').then((m) => ({ default: m.CourseMapper })),
 )
@@ -69,9 +73,11 @@ function UserIdCard({ uid }: { uid: string }) {
 function Clubhouse({
   onOpenMapper,
   onOpenYardage,
+  onOpenRounds,
 }: {
   onOpenMapper: () => void
   onOpenYardage: () => void
+  onOpenRounds: () => void
 }) {
   const { profile, isAdmin, signOut } = useAuth()
 
@@ -86,8 +92,16 @@ function Clubhouse({
 
       <button
         type="button"
-        onClick={onOpenYardage}
+        onClick={onOpenRounds}
         className="tap-target rounded-xl bg-fairway-700 px-6 text-lg font-bold text-white active:bg-fairway-800"
+      >
+        Play a round
+      </button>
+
+      <button
+        type="button"
+        onClick={onOpenYardage}
+        className="tap-target rounded-xl border-2 border-fairway-600 px-6 text-lg font-bold text-fairway-800"
       >
         Yardage to the green
       </button>
@@ -119,7 +133,7 @@ function Clubhouse({
  * A real router arrives with the round lifecycle in Phase 3, which is the point
  * where shareable URLs (a join link, a specific hole) actually start to matter.
  */
-type Screen = 'clubhouse' | 'course-mapper' | 'yardage'
+type Screen = 'clubhouse' | 'course-mapper' | 'yardage' | 'rounds'
 
 function Gate() {
   const { status, isAdmin } = useAuth()
@@ -127,6 +141,23 @@ function Gate() {
 
   if (status === 'loading') return <Loading />
   if (status === 'signed-out') return <SignInScreen />
+
+  if (screen === 'rounds') {
+    return (
+      <div className="flex min-h-full flex-col">
+        <button
+          type="button"
+          onClick={() => setScreen('clubhouse')}
+          className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
+        >
+          &lsaquo; Back
+        </button>
+        <Suspense fallback={<p className="p-6 text-fairway-700">Loading…</p>}>
+          <RoundsHome />
+        </Suspense>
+      </div>
+    )
+  }
 
   if (screen === 'yardage') {
     return (
@@ -166,6 +197,7 @@ function Gate() {
     <Clubhouse
       onOpenMapper={() => setScreen('course-mapper')}
       onOpenYardage={() => setScreen('yardage')}
+      onOpenRounds={() => setScreen('rounds')}
     />
   )
 }

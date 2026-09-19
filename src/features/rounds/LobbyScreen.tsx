@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth'
+import { InProgressRound } from './InProgressRound'
 import {
   MAX_PLAYERS,
   leaveRound,
@@ -229,11 +230,10 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
       )}
 
       {started ? (
-        <section className="flex flex-col gap-3 rounded-2xl border-2 border-dashed border-fairway-300 p-4">
-          {/* PHASE 4 SEAM — the hole screen takes over from here. */}
-          <p className="text-base font-semibold text-fairway-900">
-            Everyone is on hole 1. Scoring and the hole view arrive in the next phase.
-          </p>
+        <section className="flex flex-col gap-3">
+          {round !== null && round !== undefined && (
+            <InProgressRound round={round} selfUid={uid} />
+          )}
           <p className="text-sm text-fairway-700">
             Leave this screen and come back any time — you will land straight back in this round.
           </p>
