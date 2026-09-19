@@ -67,7 +67,7 @@ which OSM polygon belongs to which hole.
 | G-1 | **No hole numbers on the OSM polygons.** 16 greens and 17 tees exist as anonymous shapes. | Blocks GPS distance-to-green. This is the only thing standing between us and a working yardage screen. | Admin course mapper (T-1.5) — tap greens in playing order using JF's annotated map as the guide |
 | G-2 | **16 green polygons for 18 holes.** Two greens are unmapped, or two holes share a green. | Two holes will have no green coordinate until resolved | Identify the two during T-1.5 and drop pins manually on the satellite view |
 | G-3 | **17 tee polygons for 18 holes.** | One hole will fall back to the green-only distance | Same as G-2 |
-| G-4 | **Source images not yet in the repo.** The scorecard photo and the annotated satellite map were pasted into chat, not saved as files. | Cannot be re-checked later without re-asking JF | **Action for JF** — save both to `assets/courses/trangie/reference/` (see that folder's README) |
+| ~~G-4~~ | ~~Source images not in the repo~~ | — | **RESOLVED 2026-09-19** — `scorecard.jpg` and `hole-map-annotated.jpg` are now in `assets/courses/trangie/reference/` |
 
 ### Cross-check available during mapping
 
