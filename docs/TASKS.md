@@ -67,11 +67,28 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 
 ## Phase 4 — Scoring & leaderboard
 
-- [ ] **T-4.1** Score entry control — large, thumb-reachable, one-handed
-- [ ] **T-4.2** Write own score; live sync to the whole group
-- [ ] **T-4.3** Edit any previously played hole
-- [ ] **T-4.4** Live leaderboard
-- [ ] **T-4.5** Hole switcher, 1–18
+> **Built 2026-09-19.** Everything lives in `src/features/scoring/`. The four
+> presentational pieces (`ScoreStepper`, `HoleSwitcher`, `Leaderboard`,
+> `ScorecardScreen`, plus `HoleScorePanel`) take plain props and never fetch, so
+> the hole screen can compose them beside the GPS panel. `useRoundScoring` is the
+> single Firestore edge and `RoundScoring` is the two wired together. Not yet
+> reachable from `App.tsx` — Phase 3 has to create a round first.
+
+- [x] **T-4.1** Score entry control — large, thumb-reachable, one-handed
+  - Quick picks cover one under to three over in a single tap; the ± stepper handles
+    the rest and seeds from par on an unscored hole
+- [x] **T-4.2** Write own score; live sync to the whole group
+  - `saveScore` cannot name another player — the uid comes from the hook, matching
+    the security rule, and other players' scores render as text, never controls
+  - The write is deliberately not awaited: offline, `setDoc` does not settle until
+    reconnect, so awaiting it would hang the UI for the rest of the round
+- [x] **T-4.3** Edit any previously played hole
+  - Tap your own cell on the full scorecard; the stepper retargets to that hole
+- [x] **T-4.4** Live leaderboard
+  - To-par and "thru N" lead, total strokes is secondary. See REQUIREMENTS §4.2 —
+    this supersedes the old "extra leaderboard columns" deferral
+- [x] **T-4.5** Hole switcher, 1–18
+  - Swipe for ±1, arrows for a gloved hand, tap strip to jump several holes
 
 ## Phase 5 — GPS & map
 
@@ -115,6 +132,6 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 ## Deferred
 
 Group-edits-anyone's-score · putts and club UI · Stableford and match play · season
-ladder · extra leaderboard columns · more courses.
+ladder · Stableford/handicap leaderboard columns · more courses.
 
 **Never:** betting or money, weather.

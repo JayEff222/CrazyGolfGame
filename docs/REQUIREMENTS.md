@@ -63,9 +63,22 @@ no ads, no in-app purchases, no profit motive. It must cost nothing to run.
 - Round history is kept permanently.
 
 ### 4.2 Scoring
-- Each player enters **their own** score per hole.
+- Each player enters **their own** score per hole. Enforced in the security rules,
+  not only in the UI — the app never renders a control that would write another
+  player's score, because Firestore would refuse it anyway.
 - Any previously played hole can be edited at any time during the round.
+- A score is between **1 and 15 strokes**. Clamped on the way in, so a mis-tap
+  cannot put a 150 on the card.
 - Live leaderboard visible to all players, updating in real time.
+- The leaderboard **ranks on to-par over the holes each player has actually
+  played**, not on total strokes. Mid-round, total strokes would rank a player
+  thru 3 above one thru 12 regardless of how either is playing, and would put a
+  player who has not teed off on top with zero.
+
+  > **Added 2026-09-19 (Phase 4).** §9 previously deferred a to-par column. That
+  > was written before it was clear that ranking a *partial* round on raw strokes
+  > is simply wrong, so to-par and "thru N" ship as the primary columns and total
+  > strokes is the secondary one.
 - **Future:** allow the group to edit anyone's score (deferred, schema supports it).
 - **Future:** putts and club-used per shot (deferred — fields reserved in the schema now).
 
@@ -203,7 +216,8 @@ simultaneously can never collide. Last-write-wins is acceptable for a group of f
 - Putts and club tracking UI
 - Stableford, match play, other formats
 - Season-long ladder
-- Additional leaderboard columns (to-par, thru)
+- Stableford points and handicap-adjusted columns on the leaderboard
+  (to-par and thru were deferred here until Phase 4; see §4.2 for why they shipped)
 - More courses
 
 Explicitly **never**: betting or money of any kind, weather integration.
@@ -217,6 +231,7 @@ Explicitly **never**: betting or money of any kind, weather integration.
 | 2026-09-19 | Initial requirements captured from 37-question scoping session |
 | 2026-09-19 | Trangie scorecard transcribed and verified; hole imagery imported |
 | 2026-09-19 | GPS hole detection pinned down (§4.3): nearest tee **or** green, 300 m range, sticky manual override, silently-degrading wake lock |
+| 2026-09-19 | Phase 4 scoring built. Score bounds (1–15) recorded; to-par and "thru" promoted from §9 to the primary leaderboard columns |
 | 2026-09-19 | Backend live: rules deployed, Firestore in australia-southeast1, Email/Password enabled |
 | 2026-09-19 | Admin reset password changed `1234` → `123456` (Firebase six-character floor) |
 | 2026-09-19 | Username email alias uses `crazygolf.invalid` (RFC 2606 reserved, can never reach a real mailbox) |
