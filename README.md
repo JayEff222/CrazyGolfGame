@@ -7,6 +7,8 @@ A private golf scoring app with a "Crazy Cards" side game, for JF, family and cl
 - **Satellite hole maps** showing you and the flag
 - **Crazy Cards** — a deck of chaos dealt at the start of the round
 
+**Live:** https://crazygolfgame.web.app
+
 ## Docs
 
 | Document | What's in it |

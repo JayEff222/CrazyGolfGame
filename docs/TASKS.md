@@ -44,7 +44,7 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [x] **T-2.1** Username+password signup/login with the internal-domain alias; uniqueness and error states
 - [x] **T-2.2** Auth context, protected routes, session restore
 - [ ] **T-2.3** Profile screen — display name, avatar with client-side resize to base64 WebP
-- [ ] **T-2.4** Admin user list + "reset password to 1234" action, and the change-password prompt on next login
+- [ ] **T-2.4** Admin user list + "reset password to 123456" action, and the change-password prompt on next login
 
 ## Phase 3 — Round lifecycle
 

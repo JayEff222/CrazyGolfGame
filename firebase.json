@@ -9,12 +9,13 @@
     "rewrites": [{ "source": "**", "destination": "/index.html" }],
     "headers": [
       {
-        "source": "/sw.js",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        "_comment": "Only Vite's content-hashed output is safe to cache forever. This is scoped to /assets/ on purpose: a broad **/*.js rule also matches sw.js and registerSW.js, and a service worker cached for a year means nobody ever receives an update again.",
+        "source": "/assets/**/*.@(js|css|woff2|png|jpg|svg)",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
       },
       {
-        "source": "**/*.@(js|css|woff2|png|jpg|svg)",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        "source": "/@(sw.js|registerSW.js|workbox-*.js|manifest.webmanifest)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       }
     ]
   },
