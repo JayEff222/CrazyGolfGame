@@ -80,3 +80,19 @@ export function describeAuthError(error: unknown): string {
       return 'Something went wrong. Try again.'
   }
 }
+
+/**
+ * Whether this user is an admin.
+ *
+ * Admin status lives in a collection the app cannot write to, so this is a read
+ * of fact rather than a claim the client can forge. A denied read means not an
+ * admin, which is the safe answer either way.
+ */
+export async function isAdminUser(uid: string): Promise<boolean> {
+  try {
+    const snapshot = await getDoc(doc(db, 'admins', uid))
+    return snapshot.exists()
+  } catch {
+    return false
+  }
+}

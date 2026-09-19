@@ -31,6 +31,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // The admin course mapper is a one-person, one-off tool used at home on
+        // wifi. Precaching it would make every player download Leaflet on mobile
+        // data for a screen they will never open.
+        globIgnores: ['**/CourseMapper-*.{js,css}'],
         runtimeCaching: [
           {
             // Satellite tiles, cached so a hole map still renders out of signal.

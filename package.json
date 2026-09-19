@@ -20,7 +20,9 @@
     "fb": "node node_modules/firebase-tools/lib/bin/firebase.js",
     "fb:login": "node node_modules/firebase-tools/lib/bin/firebase.js login --no-localhost",
     "fb:logout": "node node_modules/firebase-tools/lib/bin/firebase.js logout",
-    "seed": "node scripts/seed-course.js"
+    "seed": "node scripts/seed-course.js",
+    "prebuild": "node scripts/copy-course-data.js",
+    "predev": "node scripts/copy-course-data.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",

@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth'
 import { auth } from '../../lib/firebase'
 import { usernameToEmail, validatePassword, validateUsername } from '../../lib/username'
-import { createProfile, loadProfile, updateProfile, type PlayerProfile } from '../../lib/users'
+import { createProfile, isAdminUser, loadProfile, updateProfile, type PlayerProfile } from '../../lib/users'
 import { AuthContext, type AuthState, type AuthStatus } from './AuthContext'
 
 /**
@@ -23,15 +23,18 @@ import { AuthContext, type AuthState, type AuthStatus } from './AuthContext'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading')
   const [profile, setProfile] = useState<PlayerProfile | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const adoptUser = useCallback(async (user: User | null) => {
     if (user === null) {
       setProfile(null)
+      setIsAdmin(false)
       setStatus('signed-out')
       return
     }
-    const loaded = await loadProfile(user.uid)
+    const [loaded, admin] = await Promise.all([loadProfile(user.uid), isAdminUser(user.uid)])
     setProfile(loaded)
+    setIsAdmin(admin)
     setStatus('signed-in')
   }, [])
 
@@ -91,8 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [adoptUser])
 
   const value = useMemo<AuthState>(
-    () => ({ status, profile, signIn, signUp, signOut, changePassword, refresh }),
-    [status, profile, signIn, signUp, signOut, changePassword, refresh],
+    () => ({ status, profile, isAdmin, signIn, signUp, signOut, changePassword, refresh }),
+    [status, profile, isAdmin, signIn, signUp, signOut, changePassword, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

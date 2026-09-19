@@ -17,6 +17,7 @@ const signUp = vi.fn()
 const stubAuth = (overrides: Partial<AuthState> = {}): AuthState => ({
   status: 'signed-out',
   profile: null,
+  isAdmin: false,
   signIn,
   signUp,
   signOut: vi.fn(),

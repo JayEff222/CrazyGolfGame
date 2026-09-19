@@ -1,7 +1,15 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { AuthProvider } from '../features/auth/AuthProvider'
 import { useAuth } from '../features/auth/useAuth'
 import { SignInScreen } from '../features/auth/SignInScreen'
+
+/*
+ * Lazily loaded: the mapper pulls in Leaflet and is used by one admin, once per
+ * course. There is no reason for every player to download it to enter a score.
+ */
+const CourseMapper = lazy(() =>
+  import('../features/admin/CourseMapper').then((m) => ({ default: m.CourseMapper })),
+)
 
 function Loading() {
   return (
@@ -54,8 +62,8 @@ function UserIdCard({ uid }: { uid: string }) {
   )
 }
 
-function Clubhouse() {
-  const { profile, signOut } = useAuth()
+function Clubhouse({ onOpenMapper }: { onOpenMapper: () => void }) {
+  const { profile, isAdmin, signOut } = useAuth()
 
   return (
     <main className="mx-auto flex min-h-full w-full max-w-md flex-col gap-6 px-5 py-10">
@@ -65,6 +73,17 @@ function Clubhouse() {
       <p className="text-fairway-800">
         You&apos;re signed in. Rounds, scoring and cards land in the next phases.
       </p>
+
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={onOpenMapper}
+          className="tap-target rounded-xl bg-fairway-700 px-6 text-base font-bold text-white active:bg-fairway-800"
+        >
+          Course mapper
+        </button>
+      )}
+
       {profile !== null && <UserIdCard uid={profile.uid} />}
       <button
         type="button"
@@ -77,12 +96,38 @@ function Clubhouse() {
   )
 }
 
+/**
+ * Screen selection is a bit of state for now rather than a router.
+ * A real router arrives with the round lifecycle in Phase 3, which is the point
+ * where shareable URLs (a join link, a specific hole) actually start to matter.
+ */
+type Screen = 'clubhouse' | 'course-mapper'
+
 function Gate() {
-  const { status } = useAuth()
+  const { status, isAdmin } = useAuth()
+  const [screen, setScreen] = useState<Screen>('clubhouse')
 
   if (status === 'loading') return <Loading />
   if (status === 'signed-out') return <SignInScreen />
-  return <Clubhouse />
+
+  if (screen === 'course-mapper' && isAdmin) {
+    return (
+      <div className="flex min-h-full flex-col">
+        <button
+          type="button"
+          onClick={() => setScreen('clubhouse')}
+          className="tap-target self-start px-5 text-base font-semibold text-fairway-700"
+        >
+          ‹ Back
+        </button>
+        <Suspense fallback={<p className="p-6 text-fairway-700">Loading the map…</p>}>
+          <CourseMapper />
+        </Suspense>
+      </div>
+    )
+  }
+
+  return <Clubhouse onOpenMapper={() => setScreen('course-mapper')} />
 }
 
 export function App() {

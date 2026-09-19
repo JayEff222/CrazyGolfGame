@@ -6,6 +6,8 @@ export type AuthStatus = 'loading' | 'signed-out' | 'signed-in'
 export interface AuthState {
   readonly status: AuthStatus
   readonly profile: PlayerProfile | null
+  /** True when this user has a document in the admins collection. */
+  readonly isAdmin: boolean
   readonly signIn: (username: string, password: string) => Promise<void>
   readonly signUp: (username: string, password: string) => Promise<void>
   readonly signOut: () => Promise<void>
