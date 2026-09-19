@@ -123,6 +123,13 @@ no ads, no in-app purchases, no profit motive. It must cost nothing to run.
   It **does** record what was played, by whom, against whom, on which hole, and when.
 - **Timing:** each card declares its own legal timing (anytime / tee only / green
   only / etc.). The card text states the rule; players self-enforce.
+- **Retroactive play is allowed.** A card may be played after a shot has been hit.
+  The guide is that the window closes when the next player hits — but on the tee,
+  anyone may still be made to retake right up until the group leaves the tee box.
+  **The app does not enforce any of this.** It shows each card's stated timing and
+  records what was played and when; the group settles the rest. Deliberately loose:
+  a strict cutoff would kill the best moment in the game, which is playing a card
+  on someone just as they walk off the tee pleased with themselves.
 - A played card is marked used — still visible, but disabled.
 - Unplayed cards may be carried to the end of the round; there is no forced use.
 - The admin **cannot** void or cancel a card once played.
@@ -205,7 +212,7 @@ simultaneously can never collide. Last-write-wins is acceptable for a group of f
 | # | Question | Status |
 |---|---|---|
 | Q-1 | Which OSM green polygon belongs to which hole | Open — resolved by the admin course mapper (T-1.5) |
-| Q-2 | Retroactive card play — can a card be played after a shot is taken? | Deferred until the card list exists |
+| ~~Q-2~~ | ~~Retroactive card play~~ | **Resolved 2026-09-19** — yes, allowed. Guide cutoff is the next player hitting, but the tee box stays open until the group leaves. Not enforced in code. See §4.4 |
 | Q-3 | Final card list and per-card timing rules | Deferred — starter deck seeded, edited in-app |
 
 ---
