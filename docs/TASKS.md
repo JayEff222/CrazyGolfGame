@@ -59,11 +59,22 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 
 ## Phase 3 — Round lifecycle
 
-- [ ] **T-3.1** Create round — course, game type, card settings
-- [ ] **T-3.2** Join by room code, 2–4 player cap
-- [ ] **T-3.3** Lobby — player list, ready state, admin controls
-- [ ] **T-3.4** Start round — deal cards, everyone lands on hole 1
-- [ ] **T-3.5** Rejoin an in-progress round after a dead phone
+- [x] **T-3.1** Create round — course, game type, card settings
+- [x] **T-3.2** Join by room code, 2–4 player cap
+- [x] **T-3.3** Lobby — player list, ready state, admin controls
+- [x] **T-3.4** Start round — deal cards, everyone lands on hole 1
+  - Status moves to `in-progress` and a `round_started` event is recorded. Dealing
+    is Phase 7 and the hole screen is Phase 4; both have a marked seam in
+    `LobbyScreen.tsx`.
+- [x] **T-3.5** Rejoin an in-progress round after a dead phone
+  - Two routes: the device remembers the round and offers it back, and typing the
+    room code puts an existing player straight back in even after the start.
+    Device-independent rejoin needs a "which rounds is this player in" query that
+    `src/lib/rounds.ts` does not have yet.
+
+> **Not wired into the app shell yet.** `RoundsHome` is exported from
+> `src/features/rounds/` but `src/app/App.tsx` still renders the Phase 2 clubhouse
+> placeholder, and App.tsx was out of scope for this task.
 
 ## Phase 4 — Scoring & leaderboard
 
