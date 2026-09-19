@@ -120,12 +120,12 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 
 ## Phase 7 — Cards in play
 
-- [ ] **T-7.1** Deal engine — even split / fixed-per-player / everyone-same; extras discarded. Heavy unit tests
-- [ ] **T-7.2** Secret vs open hands, set at round setup
-- [ ] **T-7.3** Play a card → marked used, still visible, disabled
-- [ ] **T-7.4** Target another player + notify them
-- [ ] **T-7.5** Event feed
-- [ ] **T-7.6** Unplayed cards persist to the end of the round
+- [x] **T-7.1** Deal engine — even split / fixed-per-player / everyone-same; extras discarded. Heavy unit tests
+- [x] **T-7.2** Secret vs open hands, set at round setup
+- [x] **T-7.3** Play a card → marked used, still visible, disabled
+- [x] **T-7.4** Target another player + notify them
+- [x] **T-7.5** Event feed
+- [x] **T-7.6** Unplayed cards persist to the end of the round
 
 ## Phase 8 — Offline hardening
 

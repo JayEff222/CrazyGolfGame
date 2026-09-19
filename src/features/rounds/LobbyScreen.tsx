@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth'
 import { InProgressRound } from './InProgressRound'
+import { dealRoundCards, DealSummary, type DealSummaryData } from '../cards'
 import {
   MAX_PLAYERS,
   leaveRound,
@@ -79,6 +80,7 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
+  const [deal, setDeal] = useState<DealSummaryData | null>(null)
 
   useEffect(() => {
     const unsubscribeRound = subscribeRound(roundId, setRound)
@@ -150,12 +152,17 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
     try {
       await setRoundStatus(round.id, 'in-progress')
       await recordEvent(round.id, { type: 'round_started', actorUid: uid })
+
       /*
-       * PHASE 7 SEAM — dealing happens here, between the status change and the
-       * players landing on hole 1. It needs the deck from `settings.selectedCardIds`
-       * (Phase 6) and writes a hand per player, so it is a single call added at
-       * this point and nothing above it changes.
+       * Dealing happens after the status change, not before: if dealing fails the
+       * round is still under way and can be played straight, whereas a round stuck
+       * in the lobby because the card catalogue hiccuped would be worse.
+       *
+       * dealRoundCards refuses to deal a round that already has hands, so a double
+       * tap on Start cannot re-deal cards people have already seen.
        */
+      const outcome = await dealRoundCards(round, players)
+      if (outcome.status === 'dealt') setDeal(outcome.summary)
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : 'Could not start the round. Try again.',
@@ -231,9 +238,9 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
 
       {started ? (
         <section className="flex flex-col gap-3">
-          {round !== null && round !== undefined && (
-            <InProgressRound round={round} selfUid={uid} />
-          )}
+          {/* Shown to whoever pressed Start, so the deal is visible rather than silent. */}
+          {deal !== null && <DealSummary summary={deal} />}
+          <InProgressRound round={round} selfUid={uid} />
           <p className="text-sm text-fairway-700">
             Leave this screen and come back any time — you will land straight back in this round.
           </p>

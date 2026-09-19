@@ -21,12 +21,18 @@ export interface HandScreenProps {
 }
 
 export function HandScreen({ roundId, selfUid, holeNumber, visibility }: HandScreenProps) {
-  const [players, setPlayers] = useState<readonly RoundPlayer[]>([])
+  // Tagged with the round it came from, so switching rounds cannot briefly offer
+  // the previous round's players as card targets. See EventFeed for the same pattern.
+  const [roster, setRoster] = useState<{ roundId: string; players: readonly RoundPlayer[] } | null>(
+    null,
+  )
 
-  useEffect(() => {
-    setPlayers([])
-    return subscribePlayers(roundId, setPlayers)
-  }, [roundId])
+  useEffect(
+    () => subscribePlayers(roundId, (players) => setRoster({ roundId, players })),
+    [roundId],
+  )
+
+  const players = roster !== null && roster.roundId === roundId ? roster.players : []
 
   return (
     <HandPanel

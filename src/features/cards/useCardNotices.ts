@@ -56,17 +56,39 @@ function writeAcknowledged(key: string, ids: readonly string[]): void {
 
 export function useCardNotices(roundId: string, selfUid: string): CardNoticesState {
   const key = storageKey(roundId, selfUid)
-  const [events, setEvents] = useState<readonly PlayedCardEvent[]>([])
-  const [acknowledged, setAcknowledged] = useState<readonly string[]>(() => readAcknowledged(key))
 
-  useEffect(() => {
-    setAcknowledged(readAcknowledged(key))
-  }, [key])
+  /*
+   * Both pieces of state are tagged with the key or round they belong to, and the
+   * stale case is handled when reading rather than by clearing inside an effect.
+   * A synchronous reset in an effect causes a cascading render and is rejected by
+   * the repo's react-hooks rules.
+   *
+   * It matters more here than elsewhere: a stale acknowledgement list would mean a
+   * player either re-sees a notice they already dismissed, or worse, never sees a
+   * card that was just played on them.
+   */
+  const [ackState, setAckState] = useState<{ key: string; ids: readonly string[] }>(() => ({
+    key,
+    ids: readAcknowledged(key),
+  }))
+  const [feed, setFeed] = useState<{ roundId: string; events: readonly PlayedCardEvent[] } | null>(
+    null,
+  )
 
-  useEffect(() => {
-    setEvents([])
-    return subscribeEvents(roundId, setEvents)
-  }, [roundId])
+  useEffect(() => subscribeEvents(roundId, (events) => setFeed({ roundId, events })), [roundId])
+
+  const events = feed !== null && feed.roundId === roundId ? feed.events : []
+  const acknowledged = ackState.key === key ? ackState.ids : readAcknowledged(key)
+
+  const setAcknowledged = useCallback(
+    (update: (previous: readonly string[]) => readonly string[]) => {
+      setAckState((previous) => {
+        const current = previous.key === key ? previous.ids : readAcknowledged(key)
+        return { key, ids: update(current) }
+      })
+    },
+    [key],
+  )
 
   const acknowledge = useCallback(
     (id: string) => {
@@ -77,7 +99,7 @@ export function useCardNotices(roundId: string, selfUid: string): CardNoticesSta
         return next
       })
     },
-    [key],
+    [key, setAcknowledged],
   )
 
   const notices = events

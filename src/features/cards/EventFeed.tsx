@@ -70,14 +70,23 @@ function FeedEntry({ line, now }: { line: FeedLine; now: number }) {
  * card unnamed rather than showing nothing at all.
  */
 export function EventFeed({ roundId, players }: EventFeedProps) {
-  const [events, setEvents] = useState<PlayedCardEvent[] | null>(null)
+  /*
+   * The round id is stored with the events rather than cleared in an effect.
+   * Resetting state synchronously inside an effect causes a cascading render and
+   * is rejected by the repo's react-hooks rules; tagging the data and ignoring a
+   * stale tag gets the same "don't show the previous round's feed" behaviour in
+   * one render.
+   */
+  const [feed, setFeed] = useState<{ roundId: string; events: PlayedCardEvent[] } | null>(null)
   const [titles, setTitles] = useState<ReadonlyMap<string, string>>(() => new Map())
   const [now, setNow] = useState(() => Date.now())
 
-  useEffect(() => {
-    setEvents(null)
-    return subscribeEvents(roundId, setEvents)
-  }, [roundId])
+  useEffect(
+    () => subscribeEvents(roundId, (events) => setFeed({ roundId, events })),
+    [roundId],
+  )
+
+  const events = feed !== null && feed.roundId === roundId ? feed.events : null
 
   useEffect(() => {
     let live = true
