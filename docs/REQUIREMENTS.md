@@ -2,7 +2,7 @@
 
 **Owner:** JF van Staden
 **Repo:** https://github.com/JayEff222/CrazyGolfGame
-**Status:** Phase 0 — foundations
+**Status:** Phase 2 — auth complete; course mapper next
 **Last updated:** 2026-09-19
 
 This is the living requirements document. Every decision, clarification and change
@@ -39,8 +39,15 @@ no ads, no in-app purchases, no profit motive. It must cost nothing to run.
   the display identity.
 - **Password reset:** no self-service reset (no email on file). Instead, an
   **admin reset**: JF opens the admin screen, selects a user, and their password
-  is set to `1234`. On next login the user is prompted (not forced) to change it
+  is set to `123456`. On next login the user is prompted (not forced) to change it
   from their profile page.
+
+  > **Changed from `1234` on 2026-09-19.** Firebase Auth hard-rejects passwords
+  > under six characters with `WEAK_PASSWORD` — verified against the live project —
+  > and the limit is only configurable by upgrading to Identity Platform, which
+  > needs the paid plan. `123456` is the shortest value that keeps the original
+  > intent: a number JF can read out over the phone. Open to a different choice,
+  > such as a per-reset random code like `golf-4821`.
 - **Rejoin:** a player whose phone dies can log back in and land straight back in
   the in-progress round as themselves.
 
@@ -134,10 +141,12 @@ projects created after Oct 2024. Profile photos are therefore resized client-sid
 to a small WebP and stored as base64 **inside the Firestore user document**
 (~20 KB against a 1 MB document limit). This keeps the project on Spark and free.
 
-**Auth without email.** Firebase Auth requires an email, so the app appends a fixed
-internal domain to the username behind the scenes. Firebase then enforces username
-uniqueness for us. Consequence: no password-reset emails — hence the admin reset
-to `1234` described in §3.
+**Auth without email.** Firebase Auth requires an email, so the app maps a username
+onto `<username>@crazygolf.invalid`. Firebase then enforces username uniqueness for
+us, with no separate registry and no race condition. `.invalid` is reserved by
+RFC 2606 precisely so it can never resolve to a real mailbox — verified against the
+live project before committing to it. Consequence: no password-reset emails, hence
+the admin reset described in §3.
 
 ---
 
