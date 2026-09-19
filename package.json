@@ -22,7 +22,8 @@
     "fb:logout": "node node_modules/firebase-tools/lib/bin/firebase.js logout",
     "seed": "node scripts/seed-course.js",
     "prebuild": "node scripts/copy-course-data.js",
-    "predev": "node scripts/copy-course-data.js"
+    "predev": "node scripts/copy-course-data.js",
+    "course:status": "node scripts/course-status.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",

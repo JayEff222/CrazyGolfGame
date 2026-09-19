@@ -23,8 +23,8 @@ export interface StoredHole {
   readonly number: number
   readonly mens: { metres: number; par: number; strokeIndex: number }
   readonly ladies: { metres: number; par: number; strokeIndex: number }
-  readonly green: { center: LatLng; polygon: LatLng[] } | null
-  readonly tee: { center: LatLng; polygon: LatLng[] } | null
+  readonly green: MappedShape | null
+  readonly tee: MappedShape | null
 }
 
 export interface StoredCourse {
@@ -50,8 +50,38 @@ export async function loadHoles(courseId: string): Promise<StoredHole[]> {
   return holes.sort((a, b) => a.number - b.number)
 }
 
-/** Which feature, if any, a player has assigned to each hole. */
-export type Assignment = Record<number, { green?: CourseFeature; tee?: CourseFeature }>
+/**
+ * A green or tee that has been tied to a hole.
+ *
+ * `polygon` is empty for a hand-placed pin. Two of Trangie's greens and one tee are
+ * simply absent from OpenStreetMap, so they get a point dropped on the satellite
+ * image instead of a traced shape. A centre is all the yardage needs; the polygon
+ * only ever made the map prettier.
+ */
+export interface MappedShape {
+  readonly center: LatLng
+  readonly polygon: LatLng[]
+  readonly osmId: string
+  /** True when a human dropped this pin rather than OSM supplying the shape. */
+  readonly manual?: boolean
+}
+
+export const toMappedShape = (feature: CourseFeature): MappedShape => ({
+  center: feature.center,
+  polygon: feature.polygon,
+  osmId: feature.osmId,
+})
+
+/** A hand-dropped pin. The id records where it came from and which hole it is for. */
+export const manualShape = (kind: 'green' | 'tee', hole: number, center: LatLng): MappedShape => ({
+  center,
+  polygon: [],
+  osmId: `manual:${kind}:${hole}`,
+  manual: true,
+})
+
+/** Which shape, if any, has been assigned to each hole. */
+export type Assignment = Record<number, { green?: MappedShape; tee?: MappedShape }>
 
 /**
  * Writes assigned green and tee shapes onto the hole documents.
@@ -62,17 +92,23 @@ export type Assignment = Record<number, { green?: CourseFeature; tee?: CourseFea
 export async function saveAssignments(courseId: string, assignment: Assignment): Promise<void> {
   const batch = writeBatch(db)
 
+  const encode = (shape: MappedShape | undefined) =>
+    shape
+      ? {
+          center: shape.center,
+          polygon: shape.polygon,
+          osmId: shape.osmId,
+          manual: shape.manual === true,
+        }
+      : null
+
   for (const [holeNumber, shapes] of Object.entries(assignment)) {
     const ref = doc(db, 'courses', courseId, 'holes', holeNumber)
     batch.set(
       ref,
       {
-        green: shapes.green
-          ? { center: shapes.green.center, polygon: shapes.green.polygon, osmId: shapes.green.osmId }
-          : null,
-        tee: shapes.tee
-          ? { center: shapes.tee.center, polygon: shapes.tee.polygon, osmId: shapes.tee.osmId }
-          : null,
+        green: encode(shapes.green),
+        tee: encode(shapes.tee),
         geometryUpdatedAt: serverTimestamp(),
       },
       { merge: true },
