@@ -18,15 +18,16 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
   - [x] Firebase project `crazygolfgame` created (Spark plan), web app registered, client wired up in `src/lib/firebase.ts` with offline persistence
   - [ ] Enable Email/Password auth in the console — **JF**
   - [ ] Create the Firestore database, Sydney `australia-southeast1`, production mode — **JF**
-  - [ ] Write `firestore.rules` + wire the emulator into tests
+  - [x] `firestore.rules` written, 23 emulator tests passing in CI
+  - [ ] Deploy the rules to the live project — **JF** (`npx firebase login` then `npm run deploy:rules`)
 
 ---
 
 ## Phase 1 — Course data
 
-- [ ] **T-1.1** `Course` / `Hole` / `Tee` TypeScript types + runtime schema validation + tests
+- [x] **T-1.1** `Course` / `Hole` / `Tee` TypeScript types + runtime schema validation + tests
 - [x] **T-1.2** Overpass fetch script → `geometry.json` with computed centroids *(done early — needed to size the data gap)*
-- [ ] **T-1.3** Haversine distance util, unit tested against known coordinate pairs
+- [x] **T-1.3** Haversine distance util, unit tested against known coordinate pairs
 - [ ] **T-1.4** Seed script: push `scorecard.json` + `geometry.json` into Firestore
 - [ ] **T-1.5** **Admin course mapper** — satellite map, tap greens in playing order, assign hole numbers, edit par/SI/metres, save
   - The one task that unblocks GPS. See gaps G-1/G-2/G-3 in `course-data-trangie.md`
