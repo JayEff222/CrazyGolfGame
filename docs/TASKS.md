@@ -75,11 +75,11 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 
 ## Phase 5 — GPS & map
 
-- [ ] **T-5.1** Geolocation hook — `watchPosition`, permission states, accuracy readout
-- [ ] **T-5.2** Distance-to-green-centre in metres
-- [ ] **T-5.3** Hole map — satellite tiles, player marked, green marked
-- [ ] **T-5.4** Auto-detect current hole from GPS with manual override
-- [ ] **T-5.5** GPS scoped to the distance screen + screen wake lock
+- [x] **T-5.1** Geolocation hook — `watchPosition`, permission states, accuracy readout
+- [x] **T-5.2** Distance-to-green-centre in metres
+- [x] **T-5.3** Hole map — satellite tiles, player marked, green marked
+- [x] **T-5.4** Auto-detect current hole from GPS with manual override
+- [x] **T-5.5** GPS scoped to the distance screen + screen wake lock
 
 ## Phase 6 — Card catalogue
 

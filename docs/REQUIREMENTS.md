@@ -74,8 +74,26 @@ no ads, no in-app purchases, no profit motive. It must cost nothing to run.
 - Hole view shows a satellite image of the hole with **the player marked** and
   **the green marked**.
 - Current hole auto-detected from GPS, with a manual override.
+
+  > **Clarified 2026-09-19 while building T-5.4.** Detection takes the nearest
+  > mapped **tee or green** — both ends, because greens alone flip you to the next
+  > hole as you walk off the last one, and tees alone lose you through the whole
+  > approach. Anything beyond **300 m** from every anchor is "not on a hole" rather
+  > than a guess; Trangie's longest hole is 512 m, so mid-fairway there is ~256 m
+  > from both ends and still detected.
+  >
+  > **The override is sticky.** One manual tap on a hole switches auto-detect off
+  > and it stays off until the player turns it back on. Standing between the 9th
+  > green and the 10th tee, detection flips back and forth; if the player has gone
+  > looking at another hole's yardage, the screen must not be dragged back under
+  > their thumb. Re-enabling auto does not move the hole until the next fix.
 - Easy hole switching, 1–18.
 - GPS only runs while the distance screen is open, plus a screen wake lock.
+
+  > The wake lock degrades silently. It is absent on older iOS and refused under
+  > battery saver, and the browser drops it every time the page is hidden without
+  > ever giving it back — so it is re-acquired on `visibilitychange`. A screen that
+  > dims is a mild annoyance; an error banner about it mid-round is worse.
 
 ### 4.4 Crazy Cards
 - **Catalogue:** cards are created and edited **inside the app** by the admin, on
@@ -198,6 +216,7 @@ Explicitly **never**: betting or money of any kind, weather integration.
 |---|---|
 | 2026-09-19 | Initial requirements captured from 37-question scoping session |
 | 2026-09-19 | Trangie scorecard transcribed and verified; hole imagery imported |
+| 2026-09-19 | GPS hole detection pinned down (§4.3): nearest tee **or** green, 300 m range, sticky manual override, silently-degrading wake lock |
 | 2026-09-19 | Backend live: rules deployed, Firestore in australia-southeast1, Email/Password enabled |
 | 2026-09-19 | Admin reset password changed `1234` → `123456` (Firebase six-character floor) |
 | 2026-09-19 | Username email alias uses `crazygolf.invalid` (RFC 2606 reserved, can never reach a real mailbox) |
