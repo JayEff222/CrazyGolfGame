@@ -37,7 +37,7 @@ label showing hole number, par and handicap, which is how the ordering was verif
 > so this does not affect the product. Do not "fix" it by renaming the files; the
 > filenames match the labels, which match the scorecard.
 
-### OSM geometry — PARTIAL
+### OSM geometry — COMPLETE (OSM partial, gaps pinned by hand)
 `data/courses/trangie/osm-raw.json`
 
 Pulled from the Overpass API on 2026-09-19. Trangie Golf Course is OSM way
@@ -51,7 +51,9 @@ Pulled from the Overpass API on 2026-09-19. Trangie Golf Course is OSM way
 | `golf=hole` centrelines | 0 | none exist |
 | Fairways / bunkers / hazards | 0 | none — the course genuinely has no bunkers |
 
-Re-pull with `node scripts/fetch-osm-course.js trangie`.
+Re-pull with `node scripts/fetch-osm-course.js trangie`. OSM did not cover every
+hole, so the missing shapes were placed by hand in the course mapper and carry
+`manual: true`. All 18 holes now have both a green and a tee.
 
 ### Player-drawn hole map — REFERENCE
 JF has produced an annotated satellite image with all 18 tees numbered and an
@@ -83,18 +85,18 @@ Re-check any time with `npm run course:status`.
 
 | # | Gap | Impact | How it gets filled |
 |---|---|---|---|
-| G-1 | **No hole numbers on the OSM polygons.** 16 greens and 17 tees exist as anonymous shapes. | Blocks GPS distance-to-green. This is the only thing standing between us and a working yardage screen. | Admin course mapper (T-1.5) — tap greens in playing order using JF's annotated map as the guide |
-| G-2 | **16 green polygons for 18 holes.** Two greens are unmapped, or two holes share a green. | Two holes will have no green coordinate until resolved | Identify the two during T-1.5 and drop pins manually on the satellite view |
-| G-3 | **17 tee polygons for 18 holes.** | One hole will fall back to the green-only distance | Same as G-2 |
+| ~~G-1~~ | **RESOLVED 2026-09-19.** ~~No hole numbers on the OSM polygons.~~ 16 greens and 17 tees exist as anonymous shapes. | Blocks GPS distance-to-green. This is the only thing standing between us and a working yardage screen. | Admin course mapper (T-1.5) — tap greens in playing order using JF's annotated map as the guide |
+| ~~G-2~~ | **RESOLVED 2026-09-19 — pinned by hand.** ~~16 green polygons for 18 holes.~~ Two greens are unmapped, or two holes share a green. | Two holes will have no green coordinate until resolved | Identify the two during T-1.5 and drop pins manually on the satellite view |
+| ~~G-3~~ | **RESOLVED 2026-09-19 — pinned by hand.** ~~17 tee polygons for 18 holes.~~ | One hole will fall back to the green-only distance | Same as G-2 |
 | ~~G-4~~ | ~~Source images not in the repo~~ | — | **RESOLVED 2026-09-19** — `scorecard.jpg` and `hole-map-annotated.jpg` are now in `assets/courses/trangie/reference/` |
 
-### Cross-check available during mapping
+### How the mapping was cross-checked
 
-Once greens and tees are assigned to holes, each pair's haversine distance should
-land within roughly ±25 m of the scorecard metres for that hole. Any hole outside
-that band is almost certainly a mis-assignment. `scripts/check-hole-geometry.js`
-will run this check automatically — it turns G-1 from a trust exercise into a
-verifiable one.
+Each hole's tee-to-green distance is compared against the metres printed on the
+scorecard. This was built into the course mapper as a live table rather than the
+standalone `check-hole-geometry.js` originally planned — a check you cannot miss
+while mapping beats a script nobody remembers to run. The same comparison is
+available from a terminal via `npm run course:status`.
 
 ---
 

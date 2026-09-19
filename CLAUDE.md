@@ -57,9 +57,12 @@ React 19 · TypeScript 6 · Vite 8 · Tailwind 4 · Firebase (Firestore + Auth, 
 for what is known and what is missing.
 
 ```bash
-node scripts/validate-scorecard.js    # re-verify a transcription
+node scripts/validate-scorecard.js    # re-verify a scorecard transcription
 node scripts/fetch-osm-course.js      # re-pull geometry from OSM
 node scripts/generate-icons.js        # regenerate PWA icons
+npm run seed                          # push a course into Firestore
+npm run seed:cards                    # push the card deck into Firestore
+npm run course:status                 # check mapped distances against the scorecard
 ```
 
 **Do not hand-edit `geometry.json`'s coordinates.** It is generated. Hole assignment is

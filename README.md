@@ -37,11 +37,26 @@ npm run dev
 | `npm run lint` | ESLint |
 | `npm run verify` | typecheck + lint + unit tests — run before every commit |
 
-## Course data
+## Course and card data
 
 ```bash
-node scripts/validate-scorecard.js      # re-verify the Trangie scorecard transcription
-node scripts/fetch-osm-course.js        # re-pull Trangie geometry from OpenStreetMap
+node scripts/validate-scorecard.js   # re-verify the Trangie scorecard transcription
+node scripts/fetch-osm-course.js     # re-pull course geometry from OpenStreetMap
+npm run seed                         # push the course into Firestore (admin sign-in)
+npm run seed:cards                   # push the starter card deck into Firestore
+npm run course:status                # per-hole check of mapped distances vs the scorecard
+```
+
+## Firebase
+
+The CLI is invoked through node rather than the `npx` shim, which ThreatLocker
+blocks on JF's machine:
+
+```bash
+npm run fb:login                     # sign in (paste-the-code flow)
+npm run deploy:rules                 # publish firestore.rules
+npm run deploy                       # build and deploy the app
+npm run fb -- <command>              # anything else
 ```
 
 ## Attribution

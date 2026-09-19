@@ -2,7 +2,7 @@
 
 **Owner:** JF van Staden
 **Repo:** https://github.com/JayEff222/CrazyGolfGame
-**Status:** Phase 2 — auth complete; course mapper next
+**Status:** Phases 0–7 complete and deployed — playable end to end. Offline hardening (Phase 8) and polish (Phase 9) outstanding.
 **Last updated:** 2026-09-19
 
 This is the living requirements document. Every decision, clarification and change
@@ -211,9 +211,10 @@ simultaneously can never collide. Last-write-wins is acceptable for a group of f
 
 | # | Question | Status |
 |---|---|---|
-| Q-1 | Which OSM green polygon belongs to which hole | Open — resolved by the admin course mapper (T-1.5) |
+| ~~Q-1~~ | ~~Which OSM green polygon belongs to which hole~~ | **Resolved 2026-09-19** — Trangie mapped via the course mapper; all 18 holes have a green and a tee, every distance within 25 m of the card |
 | ~~Q-2~~ | ~~Retroactive card play~~ | **Resolved 2026-09-19** — yes, allowed. Guide cutoff is the next player hitting, but the tee box stays open until the group leaves. Not enforced in code. See §4.4 |
-| Q-3 | Final card list and per-card timing rules | Deferred — starter deck seeded, edited in-app |
+| Q-3 | Which of the 20 starter cards actually work | **Open — needs a play test.** The deck is a researched guess. Suspects: The String (works on the green, likely too strong) and Beat the Clock (punishes the group for one slow player). Rewrite in the in-app editor once played |
+| Q-4 | Does signup need an invite code | **Open.** Anyone with the URL can create an account. Nobody has the URL yet, but worth deciding before the link is shared around |
 
 ---
 
