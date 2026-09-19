@@ -14,8 +14,11 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [x] **T-0.3** GitHub Actions CI — typecheck, lint, unit tests, course-data validation, e2e
 - [x] **T-0.5** PWA manifest, service worker, satellite-tile runtime caching, generated icons
 - [x] **T-0.6** Repo `CLAUDE.md` and the agent task contract
-- [ ] **T-0.4** Firebase project, Firestore security rules, emulator suite wired into tests
-  - **Blocked on JF:** needs a Firebase project created under a personal Google account
+- [~] **T-0.4** Firebase project, Firestore security rules, emulator suite wired into tests
+  - [x] Firebase project `crazygolfgame` created (Spark plan), web app registered, client wired up in `src/lib/firebase.ts` with offline persistence
+  - [ ] Enable Email/Password auth in the console — **JF**
+  - [ ] Create the Firestore database, Sydney `australia-southeast1`, production mode — **JF**
+  - [ ] Write `firestore.rules` + wire the emulator into tests
 
 ---
 
