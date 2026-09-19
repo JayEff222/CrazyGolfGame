@@ -14,12 +14,12 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [x] **T-0.3** GitHub Actions CI — typecheck, lint, unit tests, course-data validation, e2e
 - [x] **T-0.5** PWA manifest, service worker, satellite-tile runtime caching, generated icons
 - [x] **T-0.6** Repo `CLAUDE.md` and the agent task contract
-- [~] **T-0.4** Firebase project, Firestore security rules, emulator suite wired into tests
+- [x] **T-0.4** Firebase project, Firestore security rules, emulator suite wired into tests
   - [x] Firebase project `crazygolfgame` created (Spark plan), web app registered, client wired up in `src/lib/firebase.ts` with offline persistence
-  - [ ] Enable Email/Password auth in the console — **JF**
-  - [ ] Create the Firestore database, Sydney `australia-southeast1`, production mode — **JF**
+  - [x] Email/Password auth enabled (verified via the Identity Toolkit API)
+  - [x] Firestore database created — verified `australia-southeast1`, FIRESTORE_NATIVE
   - [x] `firestore.rules` written, 23 emulator tests passing in CI
-  - [ ] Deploy the rules to the live project — **JF** (`npx firebase login` then `npm run deploy:rules`)
+  - [x] Rules deployed and released to the live project 2026-09-19
 
 ---
 
@@ -35,6 +35,11 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [ ] **T-1.7** Course picker screen (built for many, ships with one)
 
 ## Phase 2 — Auth & profiles
+
+> **Sequencing note (2026-09-19):** Phase 2 now runs BEFORE the rest of Phase 1.
+> Course writes are admin-only, admins are listed in a collection nothing can write
+> from the app, and an admin entry needs a real user id — which needs signup to exist.
+> So auth has to land before the course seed (T-1.4) and the course mapper (T-1.5).
 
 - [ ] **T-2.1** Username+password signup/login with the internal-domain alias; uniqueness and error states
 - [ ] **T-2.2** Auth context, protected routes, session restore
