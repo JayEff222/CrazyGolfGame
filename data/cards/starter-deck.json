@@ -1,0 +1,198 @@
+{
+  "$comment": "Starter deck, v1. Written 2026-09-19 to be play-tested and rewritten. Mechanics are adapted from real on-course games: One Club, the String game, Gruesomes, Worst Ball, and the charity-scramble sabotage challenges (No Look Shot, Hold My Beer, Beat the Clock, No Tap-Ins). Every card is honour-system - the app records the play, the players enforce the rule. Edit these in the app rather than here once the card editor lands.",
+  "version": 1,
+  "cards": [
+    {
+      "id": "mulligan",
+      "title": "Mulligan",
+      "effect": "Replay your last shot. The first one never happened — don't count it.",
+      "category": "boost",
+      "timing": "after-shot",
+      "target": "self",
+      "active": true,
+      "notes": "Must be played immediately, before anyone else hits."
+    },
+    {
+      "id": "reverse-mulligan",
+      "title": "Reverse Mulligan",
+      "effect": "Make a player replay the shot they just hit. They must take the second one — even if it's worse.",
+      "category": "attack",
+      "timing": "after-shot",
+      "target": "opponent",
+      "active": true,
+      "notes": "Best saved for their one good drive of the day."
+    },
+    {
+      "id": "threes-company",
+      "title": "Three's Company",
+      "effect": "Pick any three clubs from a player's bag. Those are the only clubs they may use for this entire hole.",
+      "category": "attack",
+      "timing": "hole-start",
+      "target": "opponent",
+      "active": true,
+      "notes": "You may include or exclude the putter. Choose cruelly."
+    },
+    {
+      "id": "caddies-choice",
+      "title": "Caddie's Choice",
+      "effect": "You pick the club a player must use for their next shot. They have to hit it.",
+      "category": "attack",
+      "timing": "before-shot",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "mirror",
+      "title": "Mirror",
+      "effect": "A card has just been played on you. Reflect it straight back — it now applies to the player who played it, exactly as written, and not to you.",
+      "category": "defence",
+      "timing": "response",
+      "target": "opponent",
+      "active": true,
+      "notes": "Can be mirrored again by another Mirror. There is no limit. Good luck."
+    },
+    {
+      "id": "nice-try",
+      "title": "Nice Try",
+      "effect": "Cancel a card just played on you. Nothing happens. Both cards are spent.",
+      "category": "defence",
+      "timing": "response",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "no-look",
+      "title": "No Look",
+      "effect": "A player must hit their next shot with their eyes fully closed. Someone else watches where it goes.",
+      "category": "attack",
+      "timing": "before-shot",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "wrong-hand",
+      "title": "Wrong Hand",
+      "effect": "A player must hit their next shot the wrong way round — a right-hander plays left-handed, and vice versa.",
+      "category": "attack",
+      "timing": "before-shot",
+      "target": "opponent",
+      "active": true,
+      "notes": "Flipping the club over is allowed. Being good at it is not."
+    },
+    {
+      "id": "hold-my-beer",
+      "title": "Hold My Beer",
+      "effect": "A player must hit their next shot one-handed, holding a full drink in the other hand. Spill it and add a stroke.",
+      "category": "attack",
+      "timing": "before-shot",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "putter-off-the-tee",
+      "title": "Putter Off The Tee",
+      "effect": "A player must play their tee shot with the putter.",
+      "category": "attack",
+      "timing": "tee",
+      "target": "opponent",
+      "active": true,
+      "notes": "Devastating on a par 5. Merely rude on a par 3."
+    },
+    {
+      "id": "shot-swap",
+      "title": "Shot Swap",
+      "effect": "Swap balls with a player where they lie. You play their ball from its position, they play yours from yours. Strokes already taken stay with each player.",
+      "category": "attack",
+      "timing": "after-shot",
+      "target": "opponent",
+      "active": true,
+      "notes": "Play it right after they stripe one and you're in the trees."
+    },
+    {
+      "id": "commentator",
+      "title": "Commentator",
+      "effect": "You must loudly commentate a player's entire next shot in your best television voice, from address to landing. They may not ask you to stop.",
+      "category": "attack",
+      "timing": "before-shot",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "army-golf",
+      "title": "Army Golf",
+      "effect": "Left, right, left, right. Name a player: if they miss the fairway off the tee on this hole, they add one stroke. On a par 3, missing the green counts instead.",
+      "category": "attack",
+      "timing": "hole-start",
+      "target": "opponent",
+      "active": true
+    },
+    {
+      "id": "club-confiscation",
+      "title": "Club Confiscation",
+      "effect": "Name one club in a player's bag. They may not use it for the next three holes.",
+      "category": "attack",
+      "timing": "hole-start",
+      "target": "opponent",
+      "active": true,
+      "notes": "Adapted from the old One Club game. Taking the driver is obvious; taking the putter is war."
+    },
+    {
+      "id": "gimme",
+      "title": "Gimme",
+      "effect": "Pick your ball up and count one putt — wherever it is on the green.",
+      "category": "boost",
+      "timing": "green",
+      "target": "self",
+      "active": true,
+      "notes": "Must be on the putting surface. Fringe doesn't count."
+    },
+    {
+      "id": "no-tap-ins",
+      "title": "No Tap-Ins",
+      "effect": "Nothing is given on this green, for anybody. Every ball gets holed out, however short.",
+      "category": "group",
+      "timing": "green",
+      "target": "everyone",
+      "active": true
+    },
+    {
+      "id": "tee-it-forward",
+      "title": "Tee It Forward",
+      "effect": "Play your tee shot from up to fifty paces ahead of the markers.",
+      "category": "boost",
+      "timing": "tee",
+      "target": "self",
+      "active": true
+    },
+    {
+      "id": "the-string",
+      "title": "The String",
+      "effect": "Move your ball by up to one club length, no penalty, anywhere on the course. Out of a divot, around a tree, or into the hole if you're that close.",
+      "category": "boost",
+      "timing": "anytime",
+      "target": "self",
+      "active": true,
+      "notes": "From the old String game. Yes, it works on the green."
+    },
+    {
+      "id": "beat-the-clock",
+      "title": "Beat the Clock",
+      "effect": "Everyone has six minutes from now to finish this hole. Anyone not holed out when time is up adds two strokes.",
+      "category": "group",
+      "timing": "hole-start",
+      "target": "everyone",
+      "active": true,
+      "notes": "Someone start a timer. Playing this while you're away is a bold move."
+    },
+    {
+      "id": "everyone-swaps",
+      "title": "Everyone Swaps",
+      "effect": "Everybody plays their tee shot on this hole with a club borrowed from the player on their left.",
+      "category": "group",
+      "timing": "tee",
+      "target": "everyone",
+      "active": true,
+      "notes": "The lender chooses which club they hand over."
+    }
+  ]
+}

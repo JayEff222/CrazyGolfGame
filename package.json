@@ -23,7 +23,8 @@
     "seed": "node scripts/seed-course.js",
     "prebuild": "node scripts/copy-course-data.js",
     "predev": "node scripts/copy-course-data.js",
-    "course:status": "node scripts/course-status.js"
+    "course:status": "node scripts/course-status.js",
+    "seed:cards": "node scripts/seed-cards.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",
