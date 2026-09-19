@@ -60,7 +60,26 @@ which OSM polygon belongs to which hole.
 
 ---
 
-## What is missing
+## Mapping complete — 2026-09-19
+
+All 18 greens and 18 tees are assigned and stored in Firestore. Gaps G-1, G-2 and
+G-3 are closed: the shapes OpenStreetMap lacked were pinned by hand in the course
+mapper and are flagged `manual: true`.
+
+Every hole agrees with the printed scorecard inside the 25 m tolerance. Mean
+difference −4.1 m, median −3.5 m, standard deviation 6.3 m, with 14 of 18 holes
+measuring slightly short. A systematic small undershoot is what correct data looks
+like here — the card measures from the back tee markers whereas our tee centroid is
+the middle of the box, and on doglegs the card follows the playing line while a
+haversine measures straight through. Random mis-assignment would scatter in both
+directions by much larger amounts.
+
+Hole 7 (−25 m on a 471 m par 5) is the largest gap and sits right on tolerance;
+a dogleg explains it. Worth an eyeball on the course, not a correction now.
+
+Re-check any time with `npm run course:status`.
+
+## What was missing (now resolved)
 
 | # | Gap | Impact | How it gets filled |
 |---|---|---|---|

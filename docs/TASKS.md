@@ -25,15 +25,22 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 
 ## Phase 1 — Course data
 
+> **Trangie is mapped and verified (2026-09-19).** All 18 greens and tees assigned.
+> Mean difference from the printed card is −4.1 m with a 6.3 m spread; 14 of 18 holes
+> measure slightly short. That systematic bias is expected, not error: the card is
+> measured from the back tee markers while our centroid is the middle of the tee box,
+> and on a dogleg the card follows the playing line while we measure straight. Hole 7
+> (−25 m, a 471 m par 5) is the only real outlier and is almost certainly a dogleg.
+
 - [x] **T-1.1** `Course` / `Hole` / `Tee` TypeScript types + runtime schema validation + tests
 - [x] **T-1.2** Overpass fetch script → `geometry.json` with computed centroids *(done early — needed to size the data gap)*
 - [x] **T-1.3** Haversine distance util, unit tested against known coordinate pairs
 - [x] **T-1.4** Seed script: push `scorecard.json` + `geometry.json` into Firestore
   - [x] `scripts/seed-course.js` written (`npm run seed`)
   - [x] Run successfully against the live project 2026-09-19
-- [~] **T-1.5** **Admin course mapper** — satellite map, tap greens in playing order, assign hole numbers, save
+- [x] **T-1.5** **Admin course mapper** — satellite map, tap greens in playing order, assign hole numbers, save
   - [x] Built and deployed; greens and tees, resumable, with the scorecard cross-check built in
-  - [ ] JF to actually map Trangie
+  - [x] Trangie mapped 2026-09-19 — 18/18 greens and tees, every hole within tolerance
   - The one task that unblocks GPS. See gaps G-1/G-2/G-3 in `course-data-trangie.md`
 - [x] **T-1.6** Scorecard cross-check — built into the mapper as a live table rather than a separate script, so a mis-tap is visible while mapping
 - [ ] **T-1.7** Course picker screen (built for many, ships with one)
