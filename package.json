@@ -19,7 +19,8 @@
     "deploy": "npm run build && node node_modules/firebase-tools/lib/bin/firebase.js deploy",
     "fb": "node node_modules/firebase-tools/lib/bin/firebase.js",
     "fb:login": "node node_modules/firebase-tools/lib/bin/firebase.js login --no-localhost",
-    "fb:logout": "node node_modules/firebase-tools/lib/bin/firebase.js logout"
+    "fb:logout": "node node_modules/firebase-tools/lib/bin/firebase.js logout",
+    "seed": "node scripts/seed-course.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",

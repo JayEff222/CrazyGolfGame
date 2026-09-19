@@ -28,7 +28,9 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [x] **T-1.1** `Course` / `Hole` / `Tee` TypeScript types + runtime schema validation + tests
 - [x] **T-1.2** Overpass fetch script → `geometry.json` with computed centroids *(done early — needed to size the data gap)*
 - [x] **T-1.3** Haversine distance util, unit tested against known coordinate pairs
-- [ ] **T-1.4** Seed script: push `scorecard.json` + `geometry.json` into Firestore
+- [~] **T-1.4** Seed script: push `scorecard.json` + `geometry.json` into Firestore
+  - [x] `scripts/seed-course.js` written (`npm run seed`)
+  - [ ] Run it — needs an admin account to exist first
 - [ ] **T-1.5** **Admin course mapper** — satellite map, tap greens in playing order, assign hole numbers, edit par/SI/metres, save
   - The one task that unblocks GPS. See gaps G-1/G-2/G-3 in `course-data-trangie.md`
 - [ ] **T-1.6** `check-hole-geometry.js` — verify each assigned tee→green distance against the scorecard metres (±25 m), flag mis-assignments
