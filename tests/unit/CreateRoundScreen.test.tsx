@@ -36,6 +36,9 @@ vi.mock('../../src/lib/courseData', () => ({
   loadHoles: vi.fn(async () => [hole(1, 300, 250), hole(2, 400, 350)]),
 }))
 
+const { loadCatalogue } = vi.hoisted(() => ({ loadCatalogue: vi.fn() }))
+vi.mock('../../src/lib/cardsData', () => ({ loadCatalogue }))
+
 const onCreated = vi.fn()
 const onCancel = vi.fn()
 
@@ -61,6 +64,7 @@ const openScreen = async () => {
 beforeEach(() => {
   vi.mocked(rounds.createRound).mockReset().mockResolvedValue(created)
   vi.mocked(rounds.joinRound).mockReset().mockResolvedValue(undefined)
+  loadCatalogue.mockReset().mockResolvedValue({ cards: [], skipped: [] })
   onCreated.mockReset()
   onCancel.mockReset()
 })
@@ -162,10 +166,29 @@ describe('CreateRoundScreen', () => {
     expect(screen.queryByRole('radio', { name: 'Stableford' })).not.toBeInTheDocument()
   })
 
-  it('says card selection is still to come rather than leaving an empty deck unexplained', async () => {
+  it('does not claim card selection is still to come — it is right there', async () => {
+    // The screen used to carry a note saying the deck picker "arrives with the
+    // card catalogue (Phase 6)", sitting directly above the working picker.
     await openScreen()
 
-    expect(screen.getByText(/Choosing the deck arrives with the card catalogue/)).toBeInTheDocument()
+    expect(screen.queryByText(/arrives with the card catalogue/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Phase \d/)).not.toBeInTheDocument()
+  })
+
+  it('reports cards it could not read rather than quietly counting fewer', async () => {
+    // A card that fails to parse is otherwise invisible: the count above the
+    // picker simply reads lower, with nothing on screen to explain it. That is
+    // how the notes bug hid for a whole phase.
+    loadCatalogue.mockResolvedValue({
+      cards: [],
+      skipped: [{ id: 'sandie', reason: 'notes: expected string' }],
+    })
+
+    await openScreen()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /1 card could not be read and will not be dealt: sandie/i,
+    )
   })
 
   it('explains a failure and does not pretend a round exists', async () => {

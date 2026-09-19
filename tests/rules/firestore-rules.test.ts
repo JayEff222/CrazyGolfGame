@@ -108,6 +108,193 @@ describe('profiles', () => {
   })
 })
 
+describe('friendships', () => {
+  // The id is the two uids sorted, so a pair is always one document. ALICE is
+  // 'alice-uid' and BOB is 'bob-uid', so alice sorts first.
+  const PAIR = `${ALICE}_${BOB}`
+  const request = (requestedBy: string, overrides: Record<string, unknown> = {}) => ({
+    members: [ALICE, BOB],
+    requestedBy,
+    status: 'pending',
+    ...overrides,
+  })
+
+  it('can be requested by a member of the pair', async () => {
+    await assertSucceeds(setDoc(doc(as(ALICE), 'friendships', PAIR), request(ALICE)))
+  })
+
+  it('cannot be requested on somebody else’s behalf', async () => {
+    await assertFails(setDoc(doc(as(BOB), 'friendships', PAIR), request(ALICE)))
+  })
+
+  it('cannot be created between two other people', async () => {
+    await assertFails(
+      setDoc(doc(as(ADMIN), 'friendships', PAIR), request(ADMIN, { members: [ALICE, BOB] })),
+    )
+  })
+
+  it('cannot arrive already accepted', async () => {
+    await assertFails(
+      setDoc(doc(as(ALICE), 'friendships', PAIR), request(ALICE, { status: 'accepted' })),
+    )
+  })
+
+  it('cannot use an id that disagrees with its members', async () => {
+    // Otherwise one pair could hold two documents, friends one way and pending
+    // the other, forever.
+    await assertFails(setDoc(doc(as(ALICE), 'friendships', 'something-else'), request(ALICE)))
+  })
+
+  it('cannot be created with the pair in the wrong order', async () => {
+    await assertFails(
+      setDoc(doc(as(BOB), 'friendships', `${BOB}_${ALICE}`), {
+        members: [BOB, ALICE],
+        requestedBy: BOB,
+        status: 'pending',
+      }),
+    )
+  })
+
+  it('is accepted by the other person', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'friendships', PAIR), request(ALICE))
+    })
+
+    await assertSucceeds(
+      setDoc(doc(as(BOB), 'friendships', PAIR), request(ALICE, { status: 'accepted' })),
+    )
+  })
+
+  it('cannot be accepted by the person who asked', async () => {
+    // The whole point of a request.
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'friendships', PAIR), request(ALICE))
+    })
+
+    await assertFails(
+      setDoc(doc(as(ALICE), 'friendships', PAIR), request(ALICE, { status: 'accepted' })),
+    )
+  })
+
+  it('cannot be read by somebody outside the pair', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'friendships', PAIR), request(ALICE))
+    })
+
+    await assertFails(getDoc(doc(as(ADMIN), 'friendships', PAIR)))
+  })
+
+  it('can be read by either member', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'friendships', PAIR), request(ALICE))
+    })
+
+    await assertSucceeds(getDoc(doc(as(ALICE), 'friendships', PAIR)))
+    await assertSucceeds(getDoc(doc(as(BOB), 'friendships', PAIR)))
+  })
+
+  it('can be removed by either member — declining and unfriending are the same act', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'friendships', PAIR), request(ALICE))
+    })
+
+    await assertSucceeds(deleteDoc(doc(as(BOB), 'friendships', PAIR)))
+  })
+
+  it('cannot be removed by an outsider', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'friendships', PAIR), request(ALICE))
+    })
+
+    await assertFails(deleteDoc(doc(as(ADMIN), 'friendships', PAIR)))
+  })
+})
+
+describe('round invitations', () => {
+  // ALICE is a player in ROUND; ADMIN is not.
+  const invite = (fromUid: string, toUid: string, overrides: Record<string, unknown> = {}) => ({
+    roundId: ROUND,
+    toUid,
+    fromUid,
+    fromName: 'Alice',
+    roomCode: 'QF7K',
+    courseId: 'trangie',
+    status: 'pending',
+    ...overrides,
+  })
+
+  it('can be sent by a player in the round', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(ALICE), 'roundInvites', `${ROUND}_${ADMIN}`), invite(ALICE, ADMIN)),
+    )
+  })
+
+  it('cannot be sent to a round you are not in', async () => {
+    // Stops anybody who learns a round id inviting strangers into it.
+    await assertFails(
+      setDoc(doc(as(ADMIN), 'roundInvites', `${ROUND}_${BOB}`), invite(ADMIN, BOB)),
+    )
+  })
+
+  it('cannot be sent in somebody else’s name', async () => {
+    await assertFails(
+      setDoc(doc(as(ALICE), 'roundInvites', `${ROUND}_${ADMIN}`), invite(BOB, ADMIN)),
+    )
+  })
+
+  it('cannot use an id that disagrees with its round and recipient', async () => {
+    await assertFails(
+      setDoc(doc(as(ALICE), 'roundInvites', 'made-up-id'), invite(ALICE, ADMIN)),
+    )
+  })
+
+  it('is readable by the person invited and by the sender, but nobody else', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'roundInvites', `${ROUND}_${BOB}`), invite(ALICE, BOB))
+    })
+
+    await assertSucceeds(getDoc(doc(as(BOB), 'roundInvites', `${ROUND}_${BOB}`)))
+    await assertSucceeds(getDoc(doc(as(ALICE), 'roundInvites', `${ROUND}_${BOB}`)))
+    await assertFails(getDoc(doc(as(ADMIN), 'roundInvites', `${ROUND}_${BOB}`)))
+  })
+
+  it('is answered only by the person invited', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'roundInvites', `${ROUND}_${BOB}`), invite(ALICE, BOB))
+    })
+
+    await assertSucceeds(
+      setDoc(
+        doc(as(BOB), 'roundInvites', `${ROUND}_${BOB}`),
+        { status: 'accepted' },
+        { merge: true },
+      ),
+    )
+  })
+
+  it('cannot be answered by the sender on the invitee’s behalf', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'roundInvites', `${ROUND}_${BOB}`), invite(ALICE, BOB))
+    })
+
+    await assertFails(
+      setDoc(
+        doc(as(ALICE), 'roundInvites', `${ROUND}_${BOB}`),
+        { status: 'accepted' },
+        { merge: true },
+      ),
+    )
+  })
+
+  it('can be taken back by the sender', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'roundInvites', `${ROUND}_${BOB}`), invite(ALICE, BOB))
+    })
+
+    await assertSucceeds(deleteDoc(doc(as(ALICE), 'roundInvites', `${ROUND}_${BOB}`)))
+  })
+})
+
 describe('card votes', () => {
   // The document id is `{cardId}_{uid}`, which is what makes one vote per player
   // per card structural rather than hopeful. The rules check it matches.

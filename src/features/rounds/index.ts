@@ -1,8 +1,9 @@
 /*
- * Phase 3 — the round lifecycle.
+ * The round lifecycle.
  *
- * `RoundsHome` is the entry point; it owns which screen is showing. The rest is
- * exported for tests and for whatever wires this into the app shell.
+ * `RoundsHome` is the entry point from the clubhouse and owns which screen is
+ * showing: create, join, or the lobby that becomes the playing view. The rest is
+ * exported for tests and for the screens that compose these.
  */
 export { RoundsHome } from './RoundsHome'
 export { CreateRoundScreen } from './CreateRoundScreen'

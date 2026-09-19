@@ -74,18 +74,17 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [x] **T-3.2** Join by room code, 2–4 player cap
 - [x] **T-3.3** Lobby — player list, ready state, admin controls
 - [x] **T-3.4** Start round — deal cards, everyone lands on hole 1
-  - Status moves to `in-progress` and a `round_started` event is recorded. Dealing
-    is Phase 7 and the hole screen is Phase 4; both have a marked seam in
-    `LobbyScreen.tsx`.
+  - Status moves to `in-progress`, a `round_started` event is recorded, and the deal
+    runs *after* the status change: a failed deal leaves a playable round, whereas a
+    round stuck in the lobby because the catalogue hiccuped would be worse
 - [x] **T-3.5** Rejoin an in-progress round after a dead phone
-  - Two routes: the device remembers the round and offers it back, and typing the
-    room code puts an existing player straight back in even after the start.
-    Device-independent rejoin needs a "which rounds is this player in" query that
-    `src/lib/rounds.ts` does not have yet.
+  - Three routes now: the device remembers the round and offers it back, typing the
+    room code puts an existing player straight back in even after the start, and
+    since T-9.1 `listPlayerRounds` answers "which rounds is this player in" from
+    `users/{uid}/rounds` — so rejoining no longer depends on the same phone
 
-> **Not wired into the app shell yet.** `RoundsHome` is exported from
-> `src/features/rounds/` but `src/app/App.tsx` still renders the Phase 2 clubhouse
-> placeholder, and App.tsx was out of scope for this task.
+> **Wired into the app shell 2026-09-19.** `RoundsHome` is reached from the
+> clubhouse in `src/app/App.tsx`, alongside the deck, mates, history and profile.
 
 ## Phase 4 — Scoring & leaderboard
 
@@ -93,8 +92,8 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 > presentational pieces (`ScoreStepper`, `HoleSwitcher`, `Leaderboard`,
 > `ScorecardScreen`, plus `HoleScorePanel`) take plain props and never fetch, so
 > the hole screen can compose them beside the GPS panel. `useRoundScoring` is the
-> single Firestore edge and `RoundScoring` is the two wired together. Not yet
-> reachable from `App.tsx` — Phase 3 has to create a round first.
+> single Firestore edge and `RoundScoring` is the two wired together. Reached in
+> play through `LobbyScreen` once a round starts, and read-only in round history.
 
 - [x] **T-4.1** Score entry control — large, thumb-reachable, one-handed
   - Quick picks cover one under to three over in a single tap; the ± stepper handles
@@ -179,6 +178,35 @@ Legend: `[x]` done · `[ ]` not started · `[~]` in progress · `[B]` blocked
 - [x] **T-9.4** Hole-screen polish: distance + your score + everyone's scores, no scrolling
   - The real fault was the lobby chrome: room code, player list and card settings
     rendered **above** the scoring stack all round. They now sit below it, collapsed
+
+---
+
+## Phase 10 — Mates
+
+- [x] **T-10.1** Player search — matches anywhere in a username or display name, not
+      just the start. Empty box lists everyone. Filtered in memory because Firestore
+      only does prefix ranges; fine to a few hundred accounts
+- [x] **T-10.2** Friend requests — send, accept, ignore, unfriend
+  - One document per pair at `friendships/{uidA}_{uidB}` with the uids **sorted**, so
+    a pair is always one document however it started. The rules check the id against
+    the members, which is what makes that structural
+  - Only the person who did *not* ask may accept. Declining and unfriending are the
+    same act — no tombstone, or they could never ask again
+- [x] **T-10.3** Round invitations from the lobby
+  - Accepting runs the existing `decideJoin`, so a round that filled up, started or
+    finished refuses an invitation exactly as it refuses a room code
+  - The invite is marked accepted only *after* the join succeeds
+  - Friendship is enforced in the UI, not the rules: the room code is already the
+    front door. See REQUIREMENTS §3
+- [x] **T-10.5** Copy audit before the first shared deploy — removed build-time text
+      that outlived its phase (deck selection "arrives with the card catalogue
+      (Phase 6)" sat directly above the working picker; the lobby said dealing
+      "lands in a later phase"). Kept genuine empty-state and not-yet-built copy,
+      e.g. "Stableford — not built yet"
+- [x] **T-10.6** Made a short card count explain itself — setup reports cards that
+      could not be read, and the picker says how many are switched off
+- [ ] **T-10.4** Push notifications for invitations — **deliberately not built.**
+      Decided 2026-09-19: in-app only. See REQUIREMENTS §3 for why
 
 ---
 

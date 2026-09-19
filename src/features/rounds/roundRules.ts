@@ -134,8 +134,9 @@ export function decideStart(
 
 export const MIN_CARDS_PER_PLAYER = 1
 /**
- * A soft ceiling until the deck exists. The real limit is how many cards are in
- * the selected deck, which Phase 6 knows and this screen does not.
+ * A soft ceiling on the stepper. The real limit is how many cards were selected
+ * for this round, which the deal engine enforces when it actually deals - asking
+ * for more than the deck holds is caught there, not here.
  */
 export const MAX_CARDS_PER_PLAYER = 10
 export const DEFAULT_CARDS_PER_PLAYER = 3
@@ -164,10 +165,10 @@ export function clampCardsPerPlayer(value: number): number {
  *
  * `cardsPerPlayer` is deliberately null for every mode but 'fixed' - a leftover
  * number from a mode the admin changed their mind about would be read back as
- * gospel by the dealer in Phase 7.
+ * gospel by the dealer.
  *
- * `selectedCardIds` is empty because choosing the deck is Phase 6. An empty deck
- * means "deal nothing", which is the honest state of a round set up today.
+ * `selectedCardIds` carries whatever was ticked in the picker. Empty is a valid
+ * answer and means "deal nothing" - a straight round of golf with no cards.
  */
 export function buildSettings(draft: SettingsDraft): RoundSettings {
   return {

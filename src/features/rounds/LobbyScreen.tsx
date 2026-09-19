@@ -14,6 +14,7 @@ import {
   type RoundPlayer,
 } from '../../lib/rounds'
 import { SyncIndicator } from '../offline/SyncIndicator'
+import { InviteFriendsPanel } from '../friends'
 import { loadCourse } from '../../lib/courseData'
 import { forgetActiveRound, rememberActiveRound } from './activeRound'
 import { RoomCode } from './RoomCode'
@@ -248,7 +249,7 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
         <p className="text-base text-fairway-800">{describeSettings(round.settings).join(' · ')}</p>
         {round.settings.selectedCardIds.length === 0 && (
           <p className="text-sm text-fairway-700">
-            No deck selected — card dealing lands in a later phase.
+            No cards picked for this round — you&apos;re playing straight golf.
           </p>
         )}
       </section>
@@ -280,6 +281,15 @@ export function LobbyScreen({ roundId, onExit }: LobbyScreenProps) {
       </header>
 
       {!started && roundDetails}
+
+      {/* Lobby only. decideJoin refuses a round that has started, so an invitation
+          sent after the off is one nobody could act on. */}
+      {!started && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-base font-semibold text-fairway-900">Invite your mates</h2>
+          <InviteFriendsPanel round={round} players={players} />
+        </section>
+      )}
 
       {error !== null && (
         <p

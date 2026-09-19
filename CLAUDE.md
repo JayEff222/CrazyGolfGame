@@ -96,6 +96,21 @@ server, which is also less likely to trip endpoint restrictions.
 If the CLI is unavailable entirely, rules can be published by pasting
 `firestore.rules` into the Firebase console under Firestore Database > Rules.
 
+### Checking `firestore.rules` without Java and without deploying
+
+The rules unit tests need the Firestore emulator, which needs Java, which is not on
+this machine — so they only run in CI. But rules **compilation** is done server-side
+and can be checked any time without releasing anything:
+
+```bash
+npm run fb -- deploy --only firestore:rules --dry-run
+```
+
+Use this after every rules change. It catches syntax and type errors (list indexing,
+string comparison, `+` concatenation, unknown fields) in a couple of seconds, instead
+of finding them in a failed deploy. It proves the rules *compile*, not that they
+*behave* — the emulator tests in CI are still what prove behaviour.
+
 ### Playwright browsers will not launch locally
 
 ThreatLocker refuses to execute the browsers Playwright downloads into

@@ -59,6 +59,8 @@ export function CardPicker({ cards, selectedIds, onChange, minimumWanted }: Card
 
   const allIds = selectable.map((c) => c.id)
   const everySelected = allIds.length > 0 && allIds.every((id) => selected.has(id))
+  /** Cards in the catalogue but deactivated, so absent from the list below. */
+  const retired = cards.length - selectable.length
   const tooFew = minimumWanted !== undefined && selected.size > 0 && selected.size < minimumWanted
 
   if (selectable.length === 0) {
@@ -83,6 +85,18 @@ export function CardPicker({ cards, selectedIds, onChange, minimumWanted }: Card
           {everySelected ? 'Clear all' : 'Use all'}
         </button>
       </div>
+
+      {/*
+        A retired card is simply absent from this list, which makes the count above
+        look wrong to anyone who knows how many cards the deck has. Saying so is the
+        difference between "three are switched off" and "three have gone missing".
+      */}
+      {retired > 0 && (
+        <p className="text-sm text-fairway-700">
+          {retired} more {retired === 1 ? 'card is' : 'cards are'} switched off in the card editor
+          and cannot be picked.
+        </p>
+      )}
 
       {selected.size === 0 && (
         <p className="rounded-xl bg-fairway-100 px-4 py-3 text-sm text-fairway-800">

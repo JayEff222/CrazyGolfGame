@@ -1,8 +1,13 @@
 /*
- * Phase 6 / 7 — the cards feature.
+ * The cards feature.
  *
  * `CardPicker` chooses the deck at setup, `dealRoundCards` deals it when the round
  * starts, and `EventFeed` is the record of what happened with it afterwards.
+ *
+ * `CardGallery` is the deck as every player sees it between rounds - the full rule
+ * text, a thumbs up or down on each card, and the route to writing your own.
+ * `SuggestionReview` is where the admin accepts those into the catalogue, and
+ * `CardEditor` is where the admin rewrites cards that did not survive a play test.
  */
 
 export { CardPicker } from './CardPicker'

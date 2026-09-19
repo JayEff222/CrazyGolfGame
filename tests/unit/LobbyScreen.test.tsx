@@ -24,6 +24,15 @@ vi.mock('../../src/features/rounds/InProgressRound', () => ({
   ),
 }))
 
+/*
+ * Same reasoning for the invite panel: it loads the player list, the friendship
+ * list and the round's invitations, none of which is what these tests are about.
+ * Left live it also raises its own error alert, which collides with the lobby's.
+ */
+vi.mock('../../src/features/friends', () => ({
+  InviteFriendsPanel: () => <div data-testid="invite-friends">invite panel</div>,
+}))
+
 vi.mock('../../src/lib/firebase', () => ({ app: {}, auth: {}, db: {} }))
 
 vi.mock('../../src/lib/rounds', async (importOriginal) => {
@@ -232,6 +241,20 @@ describe('the hole screen layout', () => {
 
     expect(await screen.findByText('QF7K')).toBeInTheDocument()
     expect(screen.queryByText('Round details')).not.toBeInTheDocument()
+  })
+
+  it('offers invitations in the lobby', async () => {
+    showLobby(round(), both)
+    expect(await screen.findByTestId('invite-friends')).toBeInTheDocument()
+  })
+
+  it('stops offering invitations once the round is under way', async () => {
+    // decideJoin refuses a started round, so an invitation sent now would be one
+    // nobody could act on — better not to offer it than to send a dead one.
+    showLobby(started, both)
+    await screen.findByTestId('in-progress-round')
+
+    expect(screen.queryByTestId('invite-friends')).not.toBeInTheDocument()
   })
 })
 

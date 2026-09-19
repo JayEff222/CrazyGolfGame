@@ -5,6 +5,7 @@ import { forgetActiveRound, recallActiveRound } from './activeRound'
 import { CreateRoundScreen } from './CreateRoundScreen'
 import { JoinRoundScreen } from './JoinRoundScreen'
 import { LobbyScreen } from './LobbyScreen'
+import { RoundInvites } from '../friends'
 
 type View =
   | { readonly name: 'home' }
@@ -108,6 +109,10 @@ export function RoundsHome() {
           Set one up, or join the group with their room code.
         </p>
       </header>
+
+      {/* Above the buttons: an invitation is somebody waiting on you, and it
+          saves typing a room code that is being read out across a car park. */}
+      <RoundInvites onJoined={(roundId) => setView({ name: 'round', roundId })} />
 
       {resumable !== null && (
         <section className="flex flex-col gap-3 rounded-2xl bg-flag-400/20 p-4 ring-2 ring-flag-500">

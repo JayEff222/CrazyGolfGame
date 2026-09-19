@@ -45,6 +45,10 @@ const HistoryScreen = lazy(() =>
   import('../features/history').then((m) => ({ default: m.HistoryScreen })),
 )
 
+const FriendsScreen = lazy(() =>
+  import('../features/friends').then((m) => ({ default: m.FriendsScreen })),
+)
+
 function Loading() {
   return (
     <main className="flex min-h-full items-center justify-center p-6">
@@ -155,6 +159,14 @@ function Clubhouse({ onOpen }: { onOpen: (screen: Screen) => void }) {
 
       <button
         type="button"
+        onClick={() => onOpen('friends')}
+        className="tap-target rounded-xl border-2 border-fairway-600 px-6 py-4 text-lg font-bold text-fairway-800"
+      >
+        Mates
+      </button>
+
+      <button
+        type="button"
         onClick={() => onOpen('deck')}
         className="tap-target rounded-xl border-2 border-fairway-600 px-6 py-4 text-lg font-bold text-fairway-800"
       >
@@ -224,6 +236,7 @@ type Screen =
   | 'history'
   | 'deck'
   | 'suggestions'
+  | 'friends'
 
 /** Screens only an admin may open. Checked here, and again by the rules. */
 const ADMIN_ONLY: ReadonlySet<Screen> = new Set<Screen>([
@@ -286,6 +299,12 @@ function Gate() {
       return (
         <Pushed onBack={home}>
           <HistoryScreen />
+        </Pushed>
+      )
+    case 'friends':
+      return (
+        <Pushed onBack={home}>
+          <FriendsScreen />
         </Pushed>
       )
     case 'deck':

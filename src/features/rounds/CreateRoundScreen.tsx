@@ -6,7 +6,7 @@ import type { StoredCourse } from '../../lib/courseData'
 import { listCourses, loadTeeLengths, type TeeLengths } from './roundsData'
 import { rememberActiveRound } from './activeRound'
 import { CardPicker } from '../cards'
-import { loadCards } from '../../lib/cardsData'
+import { loadCatalogue } from '../../lib/cardsData'
 import type { Card } from '../../lib/cards'
 import { ChoiceGroup, type Choice } from './ChoiceGroup'
 import { GAME_TYPES, PLANNED_GAME_TYPES } from './gameTypes'
@@ -75,11 +75,20 @@ export function CreateRoundScreen({ onCreated, onCancel }: CreateRoundScreenProp
   }, [courseId])
 
   const [catalogue, setCatalogue] = useState<Card[]>([])
+  /*
+   * Cards the catalogue could not read. Surfaced rather than discarded: this
+   * screen counts "N cards in play", and a card that silently failed to parse
+   * makes that number quietly wrong with nothing on screen to explain it. That
+   * is exactly how the notes bug hid - see lib/cardsData.ts.
+   */
+  const [unreadable, setUnreadable] = useState<readonly string[]>([])
   useEffect(() => {
     let live = true
-    loadCards()
+    loadCatalogue()
       .then((loaded) => {
-        if (live) setCatalogue(loaded)
+        if (!live) return
+        setCatalogue([...loaded.cards])
+        setUnreadable(loaded.skipped.map((s) => s.id))
       })
       .catch(() => {
         // An empty catalogue is a valid round - you just play straight golf.
@@ -234,17 +243,17 @@ export function CreateRoundScreen({ onCreated, onCancel }: CreateRoundScreenProp
             </div>
           )}
 
-          {/*
-            PHASE 6 SEAM — choosing which cards are in the deck happens here. The
-            round is created with an empty `selectedCardIds`, which the dealer in
-            Phase 7 reads as "nothing to deal".
-          */}
-          <p className="rounded-xl border-2 border-dashed border-fairway-200 px-4 py-3 text-sm text-fairway-700">
-            Choosing the deck arrives with the card catalogue (Phase 6). This round is created
-            with no cards selected, so nothing will be dealt yet.
-          </p>
-
           <div className="flex flex-col gap-3 border-t-2 border-fairway-100 pt-4">
+            {unreadable.length > 0 && (
+              <p
+                role="alert"
+                className="rounded-xl bg-flag-400/25 px-4 py-3 text-sm text-fairway-900"
+              >
+                {unreadable.length} card{unreadable.length === 1 ? '' : 's'} could not be read and
+                will not be dealt: {unreadable.join(', ')}.
+              </p>
+            )}
+
             <div>
               <h3 className="text-base font-semibold text-fairway-900">Which cards are in play</h3>
               <p className="text-sm text-fairway-700">

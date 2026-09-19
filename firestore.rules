@@ -55,6 +55,68 @@ service cloud.firestore {
       }
     }
 
+    // Friendships. One document per pair, id `{uidA}_{uidB}` with the two uids
+    // sorted, so a pair always maps to the same document however it started and
+    // the two sides can never disagree about whether they are friends.
+    match /friendships/{pairId} {
+      function members() { return request.resource.data.members; }
+
+      // Only the people in it. `array-contains` queries return documents one by
+      // one, so a listing of somebody else's friends fails on the first row.
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+
+      // A request names you as the asker, contains you, and arrives pending.
+      // The id must match the sorted pair, which is what stops two documents
+      // existing for one friendship.
+      allow create: if signedIn()
+        && request.resource.data.requestedBy == request.auth.uid
+        && request.auth.uid in members()
+        && members().size() == 2
+        && members()[0] < members()[1]
+        && pairId == members()[0] + '_' + members()[1]
+        && request.resource.data.status == 'pending';
+
+      // Only the other person accepts — never the one who asked. Membership and
+      // authorship are immutable, so an accept cannot quietly rewrite either.
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.members
+        && request.auth.uid != resource.data.requestedBy
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.members == resource.data.members
+        && request.resource.data.requestedBy == resource.data.requestedBy;
+
+      // Declining a request and unfriending are the same act: remove the pair.
+      // Leaving a tombstone would only stop them ever asking again.
+      allow delete: if signedIn() && request.auth.uid in resource.data.members;
+    }
+
+    // Invitations to a round. See lib/roundInvites.ts for why friendship is
+    // deliberately not required here: the room code is already the front door.
+    match /roundInvites/{invId} {
+      function invitedToRound(roundId) {
+        return exists(/databases/$(database)/documents/rounds/$(roundId)/players/$(request.auth.uid));
+      }
+
+      allow read: if signedIn()
+        && (resource.data.toUid == request.auth.uid || resource.data.fromUid == request.auth.uid);
+
+      // You invite as yourself, into a round you are actually in, and the id
+      // pins the invitation to one person so nobody can be invited twice over.
+      allow create: if signedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && invId == request.resource.data.roundId + '_' + request.resource.data.toUid
+        && invitedToRound(request.resource.data.roundId);
+
+      // Only the invitee answers it.
+      allow update: if signedIn() && resource.data.toUid == request.auth.uid;
+
+      // The sender can take it back; the invitee can clear it away.
+      allow delete: if signedIn()
+        && (resource.data.fromUid == request.auth.uid || resource.data.toUid == request.auth.uid);
+    }
+
     // Course data is reference data: everyone reads it, only an admin edits it.
     // This is what stops a player quietly moving a green closer to their ball.
     match /courses/{courseId} {

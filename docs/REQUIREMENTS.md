@@ -68,6 +68,39 @@ no ads, no in-app purchases, no profit motive. It must cost nothing to run.
   wired, so whichever option is chosen later needs no further UI.
 - **Rejoin:** a player whose phone dies can log back in and land straight back in
   the in-progress round as themselves.
+- **Mates.** A player can search for others by username — matching **anywhere** in
+  the name, not just the start — and send a friend request. The other person
+  accepts or ignores it. An empty search box lists everybody on the app; this is a
+  private app for family and close friends, so there is nothing to hide from each
+  other. Added 2026-09-19.
+
+  > Firestore cannot express "contains", only prefix ranges, so the search filters
+  > the loaded player list in memory. A deliberate trade at this scale; past a few
+  > hundred accounts it would need a real search index.
+
+  > One document per pair, id `{uidA}_{uidB}` with the uids sorted, so a pair always
+  > maps to the same document however it started. The alternative — a copy in each
+  > player's own subtree — can end up "friends" one way and "pending" the other.
+  > Declining a request and unfriending are the same act: the pair is removed. No
+  > tombstone, because the only thing that would achieve is stopping somebody ever
+  > asking again.
+- **Round invitations.** From the lobby, before the round starts, a player can invite
+  any of their mates. The invitation waits on the invitee's rounds screen; accepting
+  joins them to the round. Accepting runs the **same join checks as the room code**,
+  so a round that filled up, started or finished refuses the invitation exactly as it
+  would refuse a code.
+
+  > Invitations are *not* restricted to friends by the security rules, only by the
+  > UI. Anyone holding the four-character room code can already walk into a round,
+  > so a stricter rule on invitations than on the front door would be theatre. The
+  > rules enforce what matters: you invite as yourself, into a round you are in.
+
+  > **No push notifications.** Decided 2026-09-19: the invitation appears in the app
+  > and that is all. FCM is free on Spark but needs a permission grant per person,
+  > only works on iPhones added to the home screen on iOS 16.4+, and on Spark can
+  > only be sent from an open client. In practice the group is standing in the same
+  > car park; the invitation saves typing a room code, it is not how anyone learns
+  > the round exists.
 
 ---
 
@@ -234,6 +267,8 @@ courses/{courseId}       name, par, holeCount, tees[], location
 cards/{cardId}           title, effect, category, timing, target, active, notes?
 cardVotes/{cardId}_{uid} cardId, uid, vote            <- one per player per card
 cardSuggestions/{id}     card fields, suggestedBy, status, reason?
+friendships/{uidA}_{uidB}  members[2], requestedBy, status   <- uids sorted
+roundInvites/{roundId}_{toUid}  roundId, toUid, fromUid, fromName, roomCode, status
 rounds/{roundId}         courseId, gameType, status, settings{...}
   players/{uid}          displayName, avatar, order
   scores/{uid}_{hole}    strokes, putts?, clubs[]?      <- reserved for future use
@@ -313,3 +348,7 @@ Explicitly **never**: betting or money of any kind, weather integration.
 | 2026-09-19 | Deck grown to **40 cards** (v2): 20 more drawn from real golf games — Wolf, Skins, Snake, Bingo Bango Bongo, Sandies, Barkies, Arnies, Ferrets, the pre-1952 Stymie, Worst Ball, Shamble, Foursomes and others |
 | 2026-09-19 | Players can read the whole deck and rate every card (§4.4). Totals visible to all; one vote per player per card, enforced by the document id |
 | 2026-09-19 | Players can suggest cards; the admin accepts or rejects with a reason, and the suggester is shown the decision (§4.4) |
+| 2026-09-19 | **Mates** (§3): username search matching anywhere in the name, friend requests, accept/ignore. Empty search lists everyone. One document per pair with sorted ids, so the two sides can never disagree |
+| 2026-09-19 | **Round invitations** (§3) from the lobby. Accepting runs the same `decideJoin` guards as the room code — an invitation is not a skeleton key. Push notifications deliberately not built; see §3 |
+| 2026-09-19 | Dated build-time copy removed from the UI: the round setup screen still announced that deck selection "arrives with the card catalogue (Phase 6)" directly above the working picker, and the lobby said dealing "lands in a later phase". Stale comments in `roundRules.ts` corrected too — one claimed `selectedCardIds` is always empty, which the code beneath it contradicted |
+| 2026-09-19 | Round setup now reports cards it could not read, and the picker says how many are switched off. A catalogue of 40 showing "37 in play" was previously unexplained on screen — the same silent-drop that hid the notes bug |

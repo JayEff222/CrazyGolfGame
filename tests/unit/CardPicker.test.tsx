@@ -65,6 +65,25 @@ describe('CardPicker', () => {
     expect(screen.queryByRole('button', { name: /Mulligan/ })).not.toBeInTheDocument()
   })
 
+  it('says how many cards are switched off, so the count is not a mystery', () => {
+    // Without this, a deck of 40 with three retired cards simply reads "37" and
+    // looks like three cards have gone missing.
+    render(
+      <CardPicker
+        cards={[...deck, card({ id: 'retired', title: 'Retired', active: false })]}
+        selectedIds={[]}
+        onChange={onChange}
+      />,
+    )
+
+    expect(screen.getByText(/1 more card is switched off/i)).toBeInTheDocument()
+  })
+
+  it('says nothing about retired cards when there are none', () => {
+    render(<CardPicker cards={deck} selectedIds={[]} onChange={onChange} />)
+    expect(screen.queryByText(/switched off/i)).not.toBeInTheDocument()
+  })
+
   it('adds a card when tapped', async () => {
     const user = userEvent.setup()
     render(<CardPicker cards={deck} selectedIds={[]} onChange={onChange} />)
